@@ -32,26 +32,59 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body {
     font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
-    background: var(--bg-page);
+    background: var(--bg-app);
     min-height: 100vh;
     color: var(--text-primary);
     -webkit-font-smoothing: antialiased;
   }
-  body { display: flex; align-items: center; justify-content: center; padding: 24px 12px; }
+  /* Desktop: subtle backdrop so the app feels framed on wide screens */
+  @media (min-width: 600px) {
+    html, body { background: var(--bg-page); }
+    body { padding: 24px; }
+    .phone {
+      max-width: 420px;
+      min-height: auto;
+      height: calc(100vh - 48px);
+      border: 1px solid var(--border-soft);
+      border-radius: 24px;
+      overflow: hidden;
+      box-shadow: 0 30px 80px rgba(0,0,0,0.5);
+    }
+  }
+  body {
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
   .num { font-family: 'JetBrains Mono', monospace; font-feature-settings: "tnum"; }
 
-  /* PHONE FRAME */
+  /* APP CONTAINER (was phone frame) */
   .phone {
-    width: 360px; background: var(--bg-app);
-    border-radius: 44px; padding: 10px;
-    border: 1px solid var(--border-soft);
-    box-shadow: 0 30px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.03);
-    position: relative;
+    width: 100%;
+    max-width: 480px;
+    margin: 0 auto;
+    background: var(--bg-app);
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    min-height: 100dvh;
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
   }
-  .notch-row { display: flex; justify-content: center; padding: 8px 0 10px; }
-  .notch { width: 110px; height: 28px; background: #000; border-radius: 14px; }
-  .screen { position: relative; min-height: 740px; display: flex; flex-direction: column; }
-  .page { padding: 8px 20px; flex: 1; display: none; flex-direction: column; }
+  .notch-row { display: none; }
+  .notch { display: none; }
+  .screen {
+    position: relative;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    max-height: none;
+  }
+  .page { padding: 16px 20px; flex: 1; display: none; flex-direction: column; }
   .page.active { display: flex; }
 
   /* SHARED */
@@ -217,7 +250,25 @@
   .bill { background: var(--bg-card); border-radius: 12px; padding: 10px 13px; display: flex; align-items: center; gap: 11px; border: 1px solid var(--border-subtle); cursor: pointer; }
   .bill:hover { background: var(--bg-card-elevated); }
   .bill.upcoming-soon { border-color: rgba(251, 191, 36, 0.25); }
-  .bill.paid-bill { opacity: 0.65; }
+  .bill.paid-bill { opacity: 0.7; }
+  .bill.paid-bill .bill-icon { background: rgba(52, 211, 153, 0.15); color: var(--c-investing); }
+  .bill.past-due { border-color: rgba(248, 113, 113, 0.35); background: rgba(248, 113, 113, 0.04); }
+  .bill.past-due .bill-icon { background: rgba(248, 113, 113, 0.15); color: var(--c-danger); }
+  .due-overdue { color: var(--c-danger); }
+  .mark-paid-btn {
+    margin-top: 6px; padding: 5px 10px; border-radius: 100px;
+    background: var(--c-investing); color: #0F1419;
+    border: none; cursor: pointer;
+    font-size: 11px; font-weight: 700;
+    display: inline-flex; align-items: center; gap: 4px;
+  }
+  .mark-paid-btn svg { width: 11px; height: 11px; }
+  .unmark-btn {
+    margin-top: 6px; padding: 4px 10px; border-radius: 100px;
+    background: transparent; color: var(--text-tertiary);
+    border: 1px solid var(--border-soft); cursor: pointer;
+    font-size: 10px; font-weight: 600;
+  }
   .bill-icon { width: 32px; height: 32px; border-radius: 9px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: rgba(251, 191, 36, 0.15); color: var(--c-bills); }
   .bill-icon svg { width: 16px; height: 16px; }
   .bill-info { flex: 1; min-width: 0; }
@@ -296,12 +347,38 @@
   .tx-time { font-size: 10px; color: var(--text-tertiary); margin-top: 2px; }
 
   /* MODAL */
-  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 100; display: none; align-items: flex-end; justify-content: center; padding: 12px; overflow-y: auto; }
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 100; display: none; align-items: flex-end; justify-content: center; overflow-y: auto; }
   .modal-overlay.open { display: flex; animation: fadeIn 0.2s; }
   @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-  .modal-sheet { width: 360px; background: var(--bg-app); border-radius: 44px; padding: 10px; border: 1px solid var(--border-soft); box-shadow: 0 -30px 80px rgba(0,0,0,0.5); animation: slideUp 0.3s ease-out; max-height: 95vh; overflow-y: auto; }
+  .modal-sheet {
+    width: 100%;
+    max-width: 480px;
+    background: var(--bg-app);
+    border-radius: 24px 24px 0 0;
+    padding: 0;
+    border: 1px solid var(--border-soft);
+    border-bottom: none;
+    box-shadow: 0 -30px 80px rgba(0,0,0,0.5);
+    animation: slideUp 0.3s ease-out;
+    max-height: 92vh;
+    max-height: 92dvh;
+    overflow-y: auto;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .modal-sheet .notch-row {
+    display: flex;
+    justify-content: center;
+    padding: 10px 0 4px;
+  }
+  .modal-sheet .notch {
+    display: block;
+    width: 40px;
+    height: 4px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 2px;
+  }
   @keyframes slideUp { from { transform: translateY(40px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-  .modal-screen { padding: 4px 18px 18px; }
+  .modal-screen { padding: 12px 20px 22px; }
   .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
   .top-title { font-size: 14px; font-weight: 700; color: var(--text-primary); }
 
@@ -1152,24 +1229,53 @@ function renderFunding() {
 function renderBills() {
   const today = todayStr();
   state.bills.forEach(b => {
-    if (b.nextDate < today && !b.paidDates) b.paidDates = [];
+    if (!b.paidDates) b.paidDates = [];
   });
   const cycleStart = state.cycle.start || today;
   const cycleEnd = state.cycle.end || today;
 
-  const inCycle = state.bills.filter(b => b.nextDate >= cycleStart && b.nextDate <= cycleEnd);
-  const upcoming = inCycle.filter(b => b.nextDate >= today).sort((a, b) => a.nextDate.localeCompare(b.nextDate));
+  // Past due: nextDate is before today AND hasn't been marked paid for that date
+  const pastDue = state.bills.filter(b => b.nextDate < today && !b.paidDates.includes(b.nextDate));
+  const upcoming = state.bills.filter(b => b.nextDate >= today).sort((a, b) => a.nextDate.localeCompare(b.nextDate));
   const paid = state.bills.filter(b => b.paidDates && b.paidDates.some(d => d >= cycleStart && d <= cycleEnd));
 
-  const cycleTotal = inCycle.reduce((s, b) => s + b.amount, 0) + paid.reduce((s, b) => s + b.amount, 0);
+  const allBillsAmount = state.bills.reduce((s, b) => s + b.amount, 0);
   const paidTotal = paid.reduce((s, b) => s + b.amount, 0);
   const upcomingTotal = upcoming.reduce((s, b) => s + b.amount, 0);
+  const pastDueTotal = pastDue.reduce((s, b) => s + b.amount, 0);
+  const cycleTotal = allBillsAmount;
   const totalPct = cycleTotal > 0 ? Math.round((paidTotal / cycleTotal) * 100) : 0;
+
+  const pastDueHtml = pastDue.length === 0 ? '' : `
+    <div class="section-label" style="color: var(--c-danger);">Past due</div>
+    <div class="bill-list">
+      ${pastDue.map(b => {
+        const days = daysBetween(b.nextDate, today);
+        return `
+          <div class="bill past-due">
+            <div class="bill-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+            <div class="bill-info">
+              <div class="bill-name" onclick="openBill('${b.id}')">${b.name}</div>
+              <div class="bill-meta"><span class="freq-pill">${b.freq.toUpperCase()}</span><span>${b.payment || 'auto-pay'}</span></div>
+              <button class="mark-paid-btn" onclick="markBillPaid('${b.id}')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                Mark paid
+              </button>
+            </div>
+            <div class="bill-right">
+              <div class="bill-amount num">${fmtMoney(b.amount)}</div>
+              <div class="bill-status-label due-overdue">${days === 1 ? '1 day late' : days + ' days late'}</div>
+            </div>
+          </div>
+        `;
+      }).join('')}
+    </div>
+  `;
 
   const upcomingHtml = upcoming.length === 0 ? '' : `
     <div class="section-label">Coming up</div>
     <div class="bill-list">
-      ${upcoming.map((b, i) => {
+      ${upcoming.map((b) => {
         const days = daysBetween(today, b.nextDate);
         const soon = days <= 3;
         const dayLabel = days === 0 ? 'today' : days === 1 ? 'in 1 day' : `in ${days} days`;
@@ -1193,19 +1299,23 @@ function renderBills() {
   const paidHtml = paid.length === 0 ? '' : `
     <div class="section-label">Paid this cycle</div>
     <div class="bill-list">
-      ${paid.map(b => `
-        <div class="bill paid-bill" onclick="openBill('${b.id}')">
-          <div class="bill-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
-          <div class="bill-info">
-            <div class="bill-name">${b.name}</div>
-            <div class="bill-meta"><span class="freq-pill">${b.freq.toUpperCase()}</span><span>${b.payment || 'auto-pay'}</span></div>
+      ${paid.map(b => {
+        const lastPaid = b.paidDates[b.paidDates.length - 1];
+        return `
+          <div class="bill paid-bill">
+            <div class="bill-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></div>
+            <div class="bill-info">
+              <div class="bill-name" onclick="openBill('${b.id}')">${b.name}</div>
+              <div class="bill-meta"><span class="freq-pill">${b.freq.toUpperCase()}</span><span>${b.payment || 'auto-pay'}</span></div>
+              <button class="unmark-btn" onclick="unmarkBillPaid('${b.id}')">Unmark paid</button>
+            </div>
+            <div class="bill-right">
+              <div class="bill-amount num">${fmtMoney(b.amount)}</div>
+              <div class="bill-status-label paid-mark">Paid ${lastPaid}</div>
+            </div>
           </div>
-          <div class="bill-right">
-            <div class="bill-amount num">${fmtMoney(b.amount)}</div>
-            <div class="bill-status-label paid-mark"><svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>Paid</div>
-          </div>
-        </div>
-      `).join('')}
+        `;
+      }).join('')}
     </div>
   `;
 
@@ -1227,7 +1337,7 @@ function renderBills() {
         </div>
         <div class="summary-side">
           <div><span class="paid num">${fmtMoney(paidTotal)}</span> paid</div>
-          <div style="margin-top: 4px;"><span class="pending num">${fmtMoney(upcomingTotal)}</span> upcoming</div>
+          <div style="margin-top: 4px;"><span class="pending num">${fmtMoney(upcomingTotal + pastDueTotal)}</span> remaining</div>
         </div>
       </div>
       <div class="progress-bar" style="height: 6px;"><div class="progress-fill bills-progress-fill" style="width: ${totalPct}%;"></div></div>
@@ -1246,10 +1356,45 @@ function renderBills() {
     </div>
     ${summary}
     ${empty}
+    ${pastDueHtml}
     ${upcomingHtml}
     ${paidHtml}
     <div class="spacer"></div>
   `;
+}
+
+function advanceBillDate(b) {
+  // After marking paid, roll the nextDate forward by the frequency
+  const d = new Date(b.nextDate);
+  if (b.freq === 'weekly') d.setDate(d.getDate() + 7);
+  else if (b.freq === 'biweekly') d.setDate(d.getDate() + 14);
+  else if (b.freq === 'annual') d.setFullYear(d.getFullYear() + 1);
+  else d.setMonth(d.getMonth() + 1); // monthly default
+  return d.toISOString().slice(0, 10);
+}
+
+function markBillPaid(id) {
+  const b = state.bills.find(x => x.id === id);
+  if (!b) return;
+  if (!b.paidDates) b.paidDates = [];
+  if (!b.paidDates.includes(b.nextDate)) {
+    b.paidDates.push(b.nextDate);
+  }
+  b.nextDate = advanceBillDate(b);
+  saveToStorage();
+  showToast(`${b.name} marked paid`);
+  renderAll();
+}
+
+function unmarkBillPaid(id) {
+  const b = state.bills.find(x => x.id === id);
+  if (!b || !b.paidDates || b.paidDates.length === 0) return;
+  const lastPaid = b.paidDates.pop();
+  // Roll the date back to the unmarked one
+  b.nextDate = lastPaid;
+  saveToStorage();
+  showToast(`${b.name} unmarked`);
+  renderAll();
 }
 
 // ============= CARDS =============

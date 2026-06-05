@@ -1,0 +1,1905 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Pulse">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0F1419">
+<title>Pulse</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-page: #08090C;
+    --bg-app: #0F1419;
+    --bg-card: #1A1F2A;
+    --bg-card-elevated: #232A38;
+    --border-subtle: rgba(255,255,255,0.06);
+    --border-soft: rgba(255,255,255,0.10);
+    --text-primary: #E8EAED;
+    --text-secondary: #9CA3AF;
+    --text-tertiary: #6B7280;
+    --c-bills: #FBBF24;
+    --c-investing: #34D399;
+    --c-stability: #60A5FA;
+    --c-fun: #F472B6;
+    --c-danger: #F87171;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+    background: var(--bg-page);
+    min-height: 100vh;
+    color: var(--text-primary);
+    -webkit-font-smoothing: antialiased;
+  }
+  body { display: flex; align-items: center; justify-content: center; padding: 24px 12px; }
+  .num { font-family: 'JetBrains Mono', monospace; font-feature-settings: "tnum"; }
+
+  /* PHONE FRAME */
+  .phone {
+    width: 360px; background: var(--bg-app);
+    border-radius: 44px; padding: 10px;
+    border: 1px solid var(--border-soft);
+    box-shadow: 0 30px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.03);
+    position: relative;
+  }
+  .notch-row { display: flex; justify-content: center; padding: 8px 0 10px; }
+  .notch { width: 110px; height: 28px; background: #000; border-radius: 14px; }
+  .screen { position: relative; min-height: 740px; display: flex; flex-direction: column; }
+  .page { padding: 8px 20px; flex: 1; display: none; flex-direction: column; }
+  .page.active { display: flex; }
+
+  /* SHARED */
+  .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+  .title { font-size: 22px; font-weight: 700; letter-spacing: -0.3px; }
+  .subtitle { font-size: 11px; color: var(--text-tertiary); margin-top: 2px; }
+  .icon-btn {
+    width: 34px; height: 34px; border-radius: 50%; background: var(--bg-card);
+    display: flex; align-items: center; justify-content: center; cursor: pointer;
+    border: none; color: var(--text-secondary);
+  }
+  .icon-btn:hover { background: var(--bg-card-elevated); }
+  .icon-btn svg { width: 16px; height: 16px; }
+  .icon-btn.accent-bills { background: rgba(251, 191, 36, 0.15); color: var(--c-bills); }
+  .icon-btn.accent-fun { background: rgba(244, 114, 182, 0.15); color: var(--c-fun); }
+  .icon-btn.accent-investing { background: rgba(52, 211, 153, 0.15); color: var(--c-investing); }
+  .icon-btn.accent-stability { background: rgba(96, 165, 250, 0.15); color: var(--c-stability); }
+
+  .section-label {
+    font-size: 10px; font-weight: 700; color: var(--text-tertiary);
+    letter-spacing: 0.6px; text-transform: uppercase;
+    margin: 18px 4px 10px;
+  }
+  .section-label:first-child { margin-top: 0; }
+  .spacer { flex: 1; }
+
+  /* EMPTY STATES */
+  .empty-state {
+    background: var(--bg-card); border: 1px dashed var(--border-soft);
+    border-radius: 14px; padding: 24px 18px; text-align: center;
+  }
+  .empty-state svg {
+    width: 32px; height: 32px; color: var(--text-tertiary);
+    margin-bottom: 10px;
+  }
+  .empty-title { font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
+  .empty-desc { font-size: 12px; color: var(--text-secondary); line-height: 1.4; margin-bottom: 14px; }
+  .empty-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 9px 16px; border-radius: 100px;
+    background: var(--bg-card-elevated); color: var(--text-primary);
+    border: 1px solid var(--border-soft);
+    font-size: 12px; font-weight: 600; cursor: pointer;
+  }
+  .empty-btn:hover { background: rgba(255,255,255,0.06); }
+  .empty-btn svg { width: 12px; height: 12px; margin: 0; color: currentColor; }
+
+  /* TOGGLE PILLS */
+  .toggle { display: flex; background: var(--bg-card); border-radius: 12px; padding: 4px; margin-bottom: 16px; }
+  .toggle-pill {
+    flex: 1; text-align: center; padding: 7px; font-size: 12px;
+    color: var(--text-secondary); border-radius: 8px; cursor: pointer;
+    font-weight: 600;
+  }
+  .toggle-pill.active { background: var(--bg-card-elevated); color: var(--text-primary); }
+
+  /* NAV */
+  .nav {
+    display: flex; justify-content: space-around;
+    padding: 14px 8px 6px; border-top: 1px solid var(--border-subtle);
+    background: var(--bg-app);
+  }
+  .nav-item {
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    color: var(--text-tertiary); cursor: pointer; padding: 4px 6px;
+  }
+  .nav-item.active { color: var(--c-fun); }
+  .nav-item svg { width: 20px; height: 20px; }
+  .nav-label { font-size: 9.5px; font-weight: 600; }
+
+  /* HOME */
+  .ring-wrap { display: flex; justify-content: center; margin-bottom: 12px; }
+  .ring { width: 240px; height: 240px; cursor: pointer; }
+  .seg { transition: stroke-opacity 0.2s, stroke-width 0.2s; cursor: pointer; }
+  .seg.dim { stroke-opacity: 0.32; }
+  .seg.active { stroke-width: 28; }
+  .ring-hint { text-align: center; font-size: 11px; color: var(--text-tertiary); margin-bottom: 14px; }
+  .legend { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 14px; margin-bottom: 14px; }
+  .legend-row { display: flex; align-items: center; gap: 9px; padding: 6px 10px; border-radius: 8px; cursor: pointer; transition: background 0.15s; }
+  .legend-row.dim .dot { opacity: 0.45; }
+  .legend-row.dim .legend-name { color: var(--text-secondary); }
+  .legend-row.active-bills { background: rgba(251, 191, 36, 0.10); }
+  .legend-row.active-investing { background: rgba(52, 211, 153, 0.10); }
+  .legend-row.active-stability { background: rgba(96, 165, 250, 0.10); }
+  .legend-row.active-fun { background: rgba(244, 114, 182, 0.12); }
+  .dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+  .legend-name { font-size: 12px; font-weight: 600; }
+  .legend-amount { font-size: 12px; margin-left: auto; font-weight: 600; }
+
+  .stat-card { background: var(--bg-card); border-radius: 14px; padding: 12px 16px; margin-bottom: 10px; border: 1px solid var(--border-subtle); }
+  .stat-row { display: flex; justify-content: space-between; align-items: center; }
+  .stat-label { font-size: 11px; color: var(--text-tertiary); }
+  .stat-value { font-size: 22px; font-weight: 600; margin-top: 2px; }
+  .stat-side { text-align: right; }
+  .stat-delta { font-size: 14px; font-weight: 600; margin-top: 2px; }
+  .delta-pos { color: var(--c-investing); }
+  .delta-neg { color: var(--c-danger); }
+
+  .bill-preview {
+    background: var(--bg-card); border-radius: 14px; padding: 11px 14px;
+    margin-bottom: 12px; display: flex; align-items: center; gap: 12px;
+    border: 1px solid var(--border-subtle); cursor: pointer;
+  }
+  .bill-preview-icon { width: 32px; height: 32px; border-radius: 8px; background: rgba(251, 191, 36, 0.15); color: var(--c-bills); display: flex; align-items: center; justify-content: center; }
+  .bill-preview-icon svg { width: 16px; height: 16px; }
+  .bill-preview-info { flex: 1; }
+  .bill-preview-name { font-size: 13px; font-weight: 600; }
+  .bill-preview-meta { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+  .bill-preview-amount { font-size: 14px; font-weight: 600; }
+
+  /* FAB */
+  .fab-row { display: flex; justify-content: center; margin-bottom: 10px; }
+  .fab {
+    width: 56px; height: 56px; border-radius: 50%;
+    background: var(--c-fun); color: #0F1419;
+    display: flex; align-items: center; justify-content: center;
+    border: none; cursor: pointer; box-shadow: 0 10px 30px rgba(244, 114, 182, 0.4);
+    transition: transform 0.15s;
+  }
+  .fab:active { transform: scale(0.94); }
+  .fab svg { width: 26px; height: 26px; }
+
+  /* FUNDING */
+  .currently-funding { text-align: center; font-size: 11px; color: var(--c-stability); margin-bottom: 14px; font-weight: 600; }
+  .bucket-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+  .bucket { background: var(--bg-card); border-radius: 12px; padding: 10px 13px; border: 1px solid var(--border-subtle); }
+  .bucket-top { display: flex; align-items: center; gap: 10px; margin-bottom: 7px; }
+  .bucket-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .bucket-name { font-size: 13px; font-weight: 600; }
+  .bucket-status { font-size: 11px; margin-left: auto; font-weight: 600; display: flex; align-items: center; gap: 4px; }
+  .status-funded { color: var(--c-investing); }
+  .status-progress { color: var(--c-stability); }
+  .status-pending { color: var(--text-tertiary); }
+  .bucket-progress-row { display: flex; align-items: center; gap: 10px; }
+  .progress-bar { flex: 1; height: 5px; background: rgba(255,255,255,0.05); border-radius: 3px; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 3px; transition: width 0.3s; }
+  .bucket-amount { font-size: 11px; color: var(--text-secondary); white-space: nowrap; }
+  .check-icon { width: 11px; height: 11px; }
+  .bucket-goal {
+    margin-top: 10px; padding-top: 10px;
+    border-top: 1px dashed rgba(255,255,255,0.07);
+  }
+  .goal-header { display: flex; align-items: center; gap: 9px; }
+  .goal-icon-wrap { width: 26px; height: 26px; border-radius: 7px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .goal-icon-wrap svg { width: 13px; height: 13px; }
+  .goal-info { flex: 1; min-width: 0; }
+  .goal-name { font-size: 12px; font-weight: 600; }
+  .goal-meta { font-size: 10px; color: var(--text-tertiary); margin-top: 2px; }
+  .goal-edit { width: 28px; height: 28px; border-radius: 7px; display: flex; align-items: center; justify-content: center; color: var(--text-tertiary); cursor: pointer; opacity: 0.5; background: transparent; border: none; }
+  .goal-edit:hover { opacity: 1; background: rgba(255,255,255,0.05); }
+  .goal-edit svg { width: 13px; height: 13px; }
+  .goal-bar-row { margin-top: 8px; display: flex; align-items: center; gap: 10px; }
+
+  /* BILLS */
+  .summary-card { background: var(--bg-card); border-radius: 14px; padding: 14px; margin-bottom: 14px; border: 1px solid var(--border-subtle); }
+  .summary-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; }
+  .summary-total { font-size: 24px; font-weight: 700; }
+  .summary-side { text-align: right; font-size: 12px; color: var(--text-secondary); }
+  .summary-side .paid { color: var(--c-investing); font-weight: 600; }
+  .summary-side .pending { color: var(--c-bills); font-weight: 600; }
+  .bills-progress-fill { background: var(--c-bills) !important; }
+  .bill-list { display: flex; flex-direction: column; gap: 6px; }
+  .bill { background: var(--bg-card); border-radius: 12px; padding: 10px 13px; display: flex; align-items: center; gap: 11px; border: 1px solid var(--border-subtle); cursor: pointer; }
+  .bill:hover { background: var(--bg-card-elevated); }
+  .bill.upcoming-soon { border-color: rgba(251, 191, 36, 0.25); }
+  .bill.paid-bill { opacity: 0.65; }
+  .bill-icon { width: 32px; height: 32px; border-radius: 9px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: rgba(251, 191, 36, 0.15); color: var(--c-bills); }
+  .bill-icon svg { width: 16px; height: 16px; }
+  .bill-info { flex: 1; min-width: 0; }
+  .bill-name { font-size: 13px; font-weight: 600; }
+  .bill-meta { font-size: 11px; color: var(--text-secondary); margin-top: 2px; display: flex; align-items: center; gap: 6px; }
+  .freq-pill { font-size: 9px; padding: 2px 6px; border-radius: 4px; background: rgba(255,255,255,0.06); color: var(--text-tertiary); font-weight: 600; letter-spacing: 0.3px; }
+  .est-pill { font-size: 9px; padding: 2px 6px; border-radius: 4px; background: rgba(251, 191, 36, 0.12); color: var(--c-bills); font-weight: 600; }
+  .bill-right { text-align: right; flex-shrink: 0; }
+  .bill-amount { font-size: 14px; font-weight: 600; }
+  .bill-status-label { font-size: 10px; margin-top: 2px; font-weight: 600; }
+  .due-soon { color: var(--c-bills); }
+  .due-later { color: var(--text-tertiary); }
+  .paid-mark { color: var(--c-investing); display: flex; align-items: center; gap: 3px; justify-content: flex-end; }
+
+  /* CARDS */
+  .card-tabs { display: flex; gap: 8px; margin-bottom: 14px; overflow-x: auto; padding-bottom: 2px; }
+  .card-tabs::-webkit-scrollbar { display: none; }
+  .card-tab { padding: 8px 13px; border-radius: 10px; background: var(--bg-card); font-size: 12px; font-weight: 600; color: var(--text-secondary); cursor: pointer; white-space: nowrap; border: 1px solid var(--border-subtle); display: flex; align-items: center; gap: 7px; flex-shrink: 0; }
+  .card-tab.active { background: var(--bg-card-elevated); color: var(--text-primary); border-color: var(--border-soft); }
+  .tab-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .credit-card { aspect-ratio: 1.586 / 1; border-radius: 16px; padding: 18px; margin-bottom: 14px; display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden; box-shadow: 0 18px 40px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.08) inset; }
+  .card-top { display: flex; justify-content: space-between; align-items: flex-start; }
+  .card-network { font-size: 11px; font-weight: 800; letter-spacing: 1.5px; opacity: 0.85; }
+  .card-chip { width: 36px; height: 26px; border-radius: 5px; }
+  .card-name { font-size: 14px; font-weight: 700; opacity: 0.9; }
+  .card-num { font-size: 16px; font-weight: 600; letter-spacing: 2px; margin-top: 3px; }
+  .card-bottom { display: flex; justify-content: space-between; align-items: flex-end; }
+  .card-holder { font-size: 10px; font-weight: 600; letter-spacing: 0.5px; opacity: 0.7; text-transform: uppercase; }
+  .card-expires { font-size: 10px; opacity: 0.7; text-align: right; }
+  .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+  .stat-tile { background: var(--bg-card); border-radius: 12px; padding: 11px 13px; border: 1px solid var(--border-subtle); }
+  .stat-tile-label { font-size: 10px; color: var(--text-tertiary); font-weight: 600; letter-spacing: 0.3px; text-transform: uppercase; }
+  .stat-tile-value { font-size: 17px; font-weight: 700; margin-top: 3px; }
+  .stat-tile-meta { font-size: 10px; color: var(--text-secondary); margin-top: 3px; }
+  .bonus-banner { background: rgba(255, 96, 0, 0.08); border: 1px solid rgba(255, 96, 0, 0.2); border-radius: 10px; padding: 9px 12px; margin-bottom: 12px; display: flex; align-items: center; gap: 9px; font-size: 12px; color: #FF8040; font-weight: 600; }
+  .bonus-banner svg { width: 14px; height: 14px; }
+  .breakdown { background: var(--bg-card); border-radius: 14px; padding: 12px 13px; border: 1px solid var(--border-subtle); margin-bottom: 14px; }
+  .breakdown-row { display: flex; align-items: center; gap: 10px; padding: 5px 0; }
+  .bd-name { font-size: 12px; font-weight: 600; flex-shrink: 0; width: 90px; }
+  .bd-bar { flex: 1; height: 5px; background: rgba(255,255,255,0.04); border-radius: 3px; overflow: hidden; }
+  .bd-fill { height: 100%; border-radius: 3px; }
+  .bd-amount { font-size: 11px; font-weight: 600; color: var(--text-secondary); width: 60px; text-align: right; }
+
+  /* LOG */
+  .filters { display: flex; gap: 8px; margin-bottom: 14px; overflow-x: auto; padding-bottom: 2px; }
+  .filters::-webkit-scrollbar { display: none; }
+  .chip-filter { padding: 7px 14px; border-radius: 100px; background: var(--bg-card); font-size: 12px; font-weight: 600; color: var(--text-secondary); cursor: pointer; white-space: nowrap; border: 1px solid var(--border-subtle); flex-shrink: 0; }
+  .chip-filter.active { background: var(--bg-card-elevated); color: var(--text-primary); border-color: var(--border-soft); }
+  .day-header { display: flex; justify-content: space-between; align-items: baseline; margin: 12px 4px 8px; }
+  .day-header:first-of-type { margin-top: 0; }
+  .day-label { font-size: 11px; font-weight: 700; color: var(--text-tertiary); letter-spacing: 0.6px; text-transform: uppercase; }
+  .day-total { font-size: 12px; color: var(--text-secondary); font-weight: 600; }
+  .tx-list { display: flex; flex-direction: column; gap: 6px; }
+  .tx { background: var(--bg-card); border-radius: 12px; padding: 10px 12px; display: flex; align-items: center; gap: 11px; border: 1px solid var(--border-subtle); cursor: pointer; animation: txFade 0.3s ease-out; }
+  .tx:hover { background: var(--bg-card-elevated); }
+  @keyframes txFade { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+  .tx-icon { width: 32px; height: 32px; border-radius: 9px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .tx-icon svg { width: 15px; height: 15px; }
+  .ic-fun-bg { background: rgba(244, 114, 182, 0.13); color: var(--c-fun); }
+  .ic-bills-bg { background: rgba(251, 191, 36, 0.13); color: var(--c-bills); }
+  .ic-investing-bg { background: rgba(52, 211, 153, 0.13); color: var(--c-investing); }
+  .ic-stability-bg { background: rgba(96, 165, 250, 0.13); color: var(--c-stability); }
+  .ic-neutral-bg { background: rgba(156, 163, 175, 0.12); color: var(--text-secondary); }
+  .tx-info { flex: 1; min-width: 0; }
+  .tx-merchant { font-size: 13px; font-weight: 600; }
+  .tx-meta { font-size: 11px; color: var(--text-secondary); margin-top: 2px; display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+  .meta-dot { width: 2px; height: 2px; border-radius: 50%; background: var(--text-tertiary); flex-shrink: 0; }
+  .cat-tag { font-size: 10px; padding: 1px 6px; border-radius: 4px; font-weight: 600; }
+  .cat-bills { background: rgba(251, 191, 36, 0.12); color: var(--c-bills); }
+  .cat-fun { background: rgba(244, 114, 182, 0.12); color: var(--c-fun); }
+  .cat-investing { background: rgba(52, 211, 153, 0.12); color: var(--c-investing); }
+  .cat-stability { background: rgba(96, 165, 250, 0.12); color: var(--c-stability); }
+  .tx-right { text-align: right; flex-shrink: 0; }
+  .tx-amount { font-size: 13px; font-weight: 600; }
+  .tx-amount.positive { color: var(--c-investing); }
+  .tx-time { font-size: 10px; color: var(--text-tertiary); margin-top: 2px; }
+
+  /* MODAL */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 100; display: none; align-items: flex-end; justify-content: center; padding: 12px; overflow-y: auto; }
+  .modal-overlay.open { display: flex; animation: fadeIn 0.2s; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  .modal-sheet { width: 360px; background: var(--bg-app); border-radius: 44px; padding: 10px; border: 1px solid var(--border-soft); box-shadow: 0 -30px 80px rgba(0,0,0,0.5); animation: slideUp 0.3s ease-out; max-height: 95vh; overflow-y: auto; }
+  @keyframes slideUp { from { transform: translateY(40px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  .modal-screen { padding: 4px 18px 18px; }
+  .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+  .top-title { font-size: 14px; font-weight: 700; color: var(--text-primary); }
+
+  /* ENTRY MODAL */
+  .amount-display { text-align: center; margin: 14px 0 14px; }
+  .amount-curr { font-size: 22px; color: var(--text-secondary); font-weight: 600; vertical-align: top; position: relative; top: 10px; margin-right: 2px; }
+  .amount-val { font-size: 50px; font-weight: 700; letter-spacing: -1px; color: var(--text-primary); }
+  .amount-cursor { display: inline-block; width: 2px; height: 40px; background: var(--c-fun); vertical-align: middle; animation: blink 1s steps(2) infinite; margin-left: 2px; }
+  @keyframes blink { 50% { opacity: 0; } }
+  .date-pill-wrap { display: flex; justify-content: center; margin: -8px 0 14px; }
+  .date-pill { padding: 6px 12px; border-radius: 100px; background: var(--bg-card); font-size: 12px; font-weight: 600; color: var(--text-secondary); cursor: pointer; border: 1px solid var(--border-subtle); display: inline-flex; align-items: center; gap: 6px; }
+  .date-pill svg { width: 12px; height: 12px; opacity: 0.75; }
+  .chip-grid { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+  .chip { padding: 7px 12px; border-radius: 100px; background: var(--bg-card); font-size: 12.5px; font-weight: 600; color: var(--text-secondary); cursor: pointer; border: 1px solid var(--border-subtle); display: inline-flex; align-items: center; gap: 6px; transition: all 0.15s; }
+  .chip-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; opacity: 0.6; }
+  .chip.selected { background: var(--bg-card-elevated); color: var(--text-primary); border-color: var(--border-soft); }
+  .chip.selected .chip-dot { opacity: 1; }
+  .pay-row { display: flex; gap: 6px; margin-bottom: 14px; overflow-x: auto; padding-bottom: 2px; }
+  .pay-row::-webkit-scrollbar { display: none; }
+  .keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 12px; }
+  .key { padding: 13px; border-radius: 12px; background: var(--bg-card); font-size: 21px; font-weight: 600; color: var(--text-primary); text-align: center; cursor: pointer; border: 1px solid var(--border-subtle); user-select: none; }
+  .key:active { background: var(--bg-card-elevated); transform: scale(0.97); }
+  .key svg { width: 22px; height: 22px; }
+  .key-icon { display: flex; align-items: center; justify-content: center; color: var(--text-secondary); }
+  .log-btn { width: 100%; padding: 15px; border-radius: 14px; color: #0F1419; font-size: 14.5px; font-weight: 700; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
+  .log-btn.bills-color { background: var(--c-bills); box-shadow: 0 10px 30px rgba(251, 191, 36, 0.3); }
+  .log-btn.fun-color { background: var(--c-fun); box-shadow: 0 10px 30px rgba(244, 114, 182, 0.3); }
+  .log-btn.investing-color { background: var(--c-investing); box-shadow: 0 10px 30px rgba(52, 211, 153, 0.3); }
+  .log-btn.stability-color { background: var(--c-stability); box-shadow: 0 10px 30px rgba(96, 165, 250, 0.3); }
+  .log-btn:disabled { background: var(--bg-card); color: var(--text-tertiary); box-shadow: none; cursor: not-allowed; }
+  .log-btn svg { width: 18px; height: 18px; }
+  .log-btn-summary { font-size: 10.5px; font-weight: 600; opacity: 0.75; margin-top: 3px; }
+
+  /* FORMS */
+  .field { margin-bottom: 12px; }
+  .field-label { font-size: 11px; color: var(--text-tertiary); font-weight: 600; margin-bottom: 5px; display: block; letter-spacing: 0.3px; }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+  .field-input, .field-select { width: 100%; padding: 11px 13px; border-radius: 10px; background: var(--bg-card); border: 1px solid var(--border-soft); color: var(--text-primary); font-size: 14px; outline: none; font-family: inherit; }
+  .field-input.mono, .field-select.mono { font-family: 'JetBrains Mono', monospace; }
+  .field-input:focus, .field-select:focus { border-color: var(--c-fun); }
+  .field-select { appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; }
+  .field-input-row { display: flex; align-items: center; background: var(--bg-card); border: 1px solid var(--border-soft); border-radius: 10px; padding: 0 13px; }
+  .field-input-row:focus-within { border-color: var(--c-fun); }
+  .field-input-row .field-prefix { font-size: 14px; color: var(--text-secondary); font-weight: 600; margin-right: 6px; }
+  .field-input-row .field-input { background: transparent; border: none; padding: 11px 0; }
+  .field-help { font-size: 10px; color: var(--text-tertiary); margin-top: 5px; }
+  .save-btn { width: 100%; padding: 14px; border-radius: 12px; background: var(--c-fun); color: #0F1419; font-size: 14px; font-weight: 700; border: none; cursor: pointer; margin-top: 6px; }
+  .save-btn:hover { opacity: 0.95; }
+  .save-btn:disabled { background: var(--bg-card); color: var(--text-tertiary); cursor: not-allowed; }
+  .save-btn.danger { background: rgba(248, 113, 113, 0.15); color: var(--c-danger); border: 1px solid rgba(248, 113, 113, 0.25); }
+  .save-btn.danger:hover { background: rgba(248, 113, 113, 0.22); }
+  .save-btn.subtle { background: var(--bg-card); color: var(--text-secondary); border: 1px solid var(--border-soft); }
+
+  /* SETTINGS */
+  .settings-card { background: var(--bg-card); border-radius: 14px; padding: 14px; margin-bottom: 10px; border: 1px solid var(--border-subtle); }
+  .settings-label { display: block; font-size: 10px; font-weight: 700; color: var(--text-tertiary); letter-spacing: 0.4px; text-transform: uppercase; margin-bottom: 8px; }
+  .settings-input { width: 100%; padding: 10px 12px; border-radius: 9px; background: var(--bg-app); border: 1px solid var(--border-soft); color: var(--text-primary); font-family: 'JetBrains Mono', monospace; font-size: 11px; outline: none; }
+  .settings-input:focus { border-color: var(--c-fun); }
+  .settings-hint { font-size: 11px; color: var(--text-tertiary); margin-top: 7px; }
+  .settings-row { display: flex; align-items: center; justify-content: space-between; gap: 14px; }
+  .settings-row.clickable { cursor: pointer; }
+  .settings-row-label { font-size: 13px; font-weight: 600; }
+  .settings-row-val { font-size: 12px; color: var(--text-secondary); margin-top: 3px; }
+  .sync-btn { padding: 8px 13px; border-radius: 100px; background: var(--bg-card-elevated); color: var(--text-primary); border: 1px solid var(--border-soft); font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+  .sync-btn svg { width: 13px; height: 13px; }
+  .toggle-switch { width: 42px; height: 24px; border-radius: 100px; background: var(--bg-card-elevated); border: 1px solid var(--border-soft); position: relative; cursor: pointer; flex-shrink: 0; transition: background 0.2s; }
+  .toggle-switch.on { background: var(--c-fun); border-color: var(--c-fun); }
+  .toggle-switch-knob { position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 50%; background: white; transition: transform 0.2s; }
+  .toggle-switch.on .toggle-switch-knob { transform: translateX(18px); }
+
+  /* COLOR PICKER (for cards) */
+  .color-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
+  .color-swatch { aspect-ratio: 1; border-radius: 10px; cursor: pointer; border: 2px solid transparent; transition: transform 0.15s; }
+  .color-swatch:hover { transform: scale(1.05); }
+  .color-swatch.selected { border-color: white; box-shadow: 0 0 0 2px var(--bg-app); }
+
+  /* TOAST */
+  .toast { position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); background: var(--bg-card-elevated); color: var(--text-primary); padding: 12px 18px; border-radius: 100px; border: 1px solid var(--border-soft); font-size: 13px; font-weight: 600; box-shadow: 0 20px 50px rgba(0,0,0,0.5); z-index: 200; display: none; align-items: center; gap: 8px; }
+  .toast.show { display: flex; animation: toastIn 0.3s ease-out; }
+  .toast svg { width: 14px; height: 14px; color: var(--c-investing); }
+  @keyframes toastIn { from { opacity: 0; transform: translate(-50%, 20px); } to { opacity: 1; transform: translate(-50%, 0); } }
+
+  /* SCROLL within phone */
+  .screen { max-height: 90vh; overflow-y: auto; scrollbar-width: thin; }
+  .screen::-webkit-scrollbar { width: 4px; }
+  .screen::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="notch-row"><div class="notch"></div></div>
+  <div class="screen">
+    <div class="page active" id="page-home"></div>
+    <div class="page" id="page-funding"></div>
+    <div class="page" id="page-bills"></div>
+    <div class="page" id="page-cards"></div>
+    <div class="page" id="page-log"></div>
+
+    <div class="nav">
+      <div class="nav-item active" data-page="home" onclick="showPage('home')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <div class="nav-label">Home</div>
+      </div>
+      <div class="nav-item" data-page="funding" onclick="showPage('funding')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
+        <div class="nav-label">Funding</div>
+      </div>
+      <div class="nav-item" data-page="bills" onclick="showPage('bills')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <div class="nav-label">Bills</div>
+      </div>
+      <div class="nav-item" data-page="cards" onclick="showPage('cards')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+        <div class="nav-label">Cards</div>
+      </div>
+      <div class="nav-item" data-page="log" onclick="showPage('log')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+        <div class="nav-label">Log</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ENTRY MODAL -->
+<div class="modal-overlay" id="entry-modal" onclick="if(event.target===this)closeModal('entry')">
+  <div class="modal-sheet">
+    <div class="notch-row"><div class="notch"></div></div>
+    <div class="modal-screen">
+      <div class="top-bar">
+        <button class="icon-btn" onclick="closeModal('entry')" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        <div class="top-title">New entry</div>
+        <div style="width: 34px;"></div>
+      </div>
+      <div class="amount-display">
+        <span class="amount-curr num">$</span><span class="amount-val num" id="amount-val">0</span><span class="amount-cursor"></span>
+      </div>
+      <div class="date-pill-wrap">
+        <button class="date-pill" id="entry-date-pill" onclick="cycleEntryDate()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          <span id="entry-date-label">Today</span>
+        </button>
+      </div>
+      <div class="section-label">Category</div>
+      <div class="chip-grid" id="category-chips"></div>
+      <div class="section-label">Payment</div>
+      <div class="pay-row" id="payment-chips"></div>
+      <div class="keypad" id="keypad"></div>
+      <button class="log-btn" id="log-btn" disabled onclick="logEntry()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        <div>
+          <div id="log-btn-text">Log entry</div>
+          <div class="log-btn-summary" id="log-btn-summary">enter amount, category, payment</div>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div class="modal-overlay" id="settings-modal" onclick="if(event.target===this)closeModal('settings')">
+  <div class="modal-sheet">
+    <div class="notch-row"><div class="notch"></div></div>
+    <div class="modal-screen">
+      <div class="top-bar">
+        <button class="icon-btn" onclick="closeModal('settings')" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        <div class="top-title">Settings</div>
+        <div style="width: 34px;"></div>
+      </div>
+
+      <div class="section-label">Cycle</div>
+      <div class="settings-card">
+        <div class="field-row">
+          <div>
+            <label class="field-label">Cycle start</label>
+            <input type="date" id="cycle-start" class="field-input mono" />
+          </div>
+          <div>
+            <label class="field-label">Cycle end</label>
+            <input type="date" id="cycle-end" class="field-input mono" />
+          </div>
+        </div>
+        <div class="field">
+          <label class="field-label">Starting bank balance</label>
+          <div class="field-input-row">
+            <span class="field-prefix">$</span>
+            <input type="number" id="cycle-start-balance" class="field-input mono" step="0.01" placeholder="0.00" />
+          </div>
+          <div class="field-help">Your checking balance on cycle start day</div>
+        </div>
+        <button class="save-btn" onclick="saveCycle()">Save cycle</button>
+      </div>
+
+      <div class="section-label">Budget allocation</div>
+      <div class="settings-card">
+        <div class="field-row">
+          <div>
+            <label class="field-label">Bills target</label>
+            <div class="field-input-row">
+              <span class="field-prefix">$</span>
+              <input type="number" id="alloc-bills" class="field-input mono" step="1" placeholder="0" />
+            </div>
+          </div>
+          <div>
+            <label class="field-label">Investing target</label>
+            <div class="field-input-row">
+              <span class="field-prefix">$</span>
+              <input type="number" id="alloc-investing" class="field-input mono" step="1" placeholder="0" />
+            </div>
+          </div>
+        </div>
+        <div class="field-row">
+          <div>
+            <label class="field-label">Stability target</label>
+            <div class="field-input-row">
+              <span class="field-prefix">$</span>
+              <input type="number" id="alloc-stability" class="field-input mono" step="1" placeholder="0" />
+            </div>
+          </div>
+          <div>
+            <label class="field-label">Fun target</label>
+            <div class="field-input-row">
+              <span class="field-prefix">$</span>
+              <input type="number" id="alloc-fun" class="field-input mono" step="1" placeholder="0" />
+            </div>
+          </div>
+        </div>
+        <div class="field-help" id="alloc-total-hint">Total income target: $0</div>
+        <button class="save-btn" onclick="saveAllocation()" style="margin-top: 10px;">Save allocation</button>
+        <div class="field-help" style="margin-top: 10px;">Tip: Tilbury's 25/15/50/10 framework — for $3,200 income try Bills $1,600, Investing $800, Stability $480, Fun $320.</div>
+      </div>
+
+      <div class="section-label">Google Sheets sync</div>
+      <div class="settings-card">
+        <label class="settings-label">Apps Script URL</label>
+        <input type="text" id="sheet-url-input" class="settings-input" placeholder="https://script.google.com/macros/s/..." />
+        <button class="sync-btn" style="margin-top: 10px;" onclick="saveSheetUrl()">Save URL</button>
+        <div class="settings-hint">Paste the deployment URL from your Apps Script web app</div>
+      </div>
+      <div class="settings-card">
+        <div class="settings-row">
+          <div>
+            <div class="settings-row-label">Last synced</div>
+            <div class="settings-row-val" id="last-synced-text">Never</div>
+          </div>
+          <button class="sync-btn" onclick="syncNow()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+            Sync now
+          </button>
+        </div>
+      </div>
+      <div class="settings-card">
+        <div class="settings-row clickable" onclick="toggleSetting('autoMonday')">
+          <div>
+            <div class="settings-row-label">Auto-pull on Mondays</div>
+            <div class="settings-hint" style="margin-top: 3px;">Refresh from Sheet once when you open the app on Monday</div>
+          </div>
+          <div class="toggle-switch" id="auto-monday-toggle"><div class="toggle-switch-knob"></div></div>
+        </div>
+      </div>
+      <div class="settings-card">
+        <div class="settings-row clickable" onclick="toggleSetting('autoPush')">
+          <div>
+            <div class="settings-row-label">Auto-push on log</div>
+            <div class="settings-hint" style="margin-top: 3px;">Send every new transaction to the Sheet immediately</div>
+          </div>
+          <div class="toggle-switch" id="auto-push-toggle"><div class="toggle-switch-knob"></div></div>
+        </div>
+      </div>
+
+      <div class="section-label">Data</div>
+      <button class="save-btn danger" onclick="clearLocal()">Clear local data</button>
+      <div class="settings-hint" style="text-align: center; margin-top: 8px;">Wipes everything in this browser. Sheet data is untouched.</div>
+    </div>
+  </div>
+</div>
+
+<!-- BILL MODAL -->
+<div class="modal-overlay" id="bill-modal" onclick="if(event.target===this)closeModal('bill')">
+  <div class="modal-sheet">
+    <div class="notch-row"><div class="notch"></div></div>
+    <div class="modal-screen">
+      <div class="top-bar">
+        <button class="icon-btn" onclick="closeModal('bill')" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        <div class="top-title" id="bill-modal-title">Add bill</div>
+        <button class="icon-btn" id="bill-delete-btn" style="display:none;" onclick="deleteBill()"><svg viewBox="0 0 24 24" fill="none" stroke="#F87171" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
+      </div>
+      <div class="field">
+        <label class="field-label">Name</label>
+        <input type="text" id="bill-name" class="field-input" placeholder="e.g. Rent, Phone, Spotify" />
+      </div>
+      <div class="field-row">
+        <div>
+          <label class="field-label">Amount</label>
+          <div class="field-input-row">
+            <span class="field-prefix">$</span>
+            <input type="number" id="bill-amount" class="field-input mono" step="0.01" placeholder="0.00" />
+          </div>
+        </div>
+        <div>
+          <label class="field-label">Frequency</label>
+          <select id="bill-freq" class="field-select">
+            <option value="monthly">Monthly</option>
+            <option value="weekly">Weekly</option>
+            <option value="biweekly">Biweekly</option>
+            <option value="annual">Annual</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label class="field-label">Next charge date</label>
+        <input type="date" id="bill-date" class="field-input mono" />
+      </div>
+      <div class="field">
+        <label class="field-label">Payment method</label>
+        <select id="bill-payment" class="field-select"></select>
+      </div>
+      <div class="field">
+        <label class="field-label">Notes (optional)</label>
+        <input type="text" id="bill-note" class="field-input" placeholder="e.g. auto-pay, Venmo to Alex" />
+      </div>
+      <button class="save-btn" onclick="saveBill()">Save bill</button>
+    </div>
+  </div>
+</div>
+
+<!-- GOAL MODAL -->
+<div class="modal-overlay" id="goal-modal" onclick="if(event.target===this)closeModal('goal')">
+  <div class="modal-sheet">
+    <div class="notch-row"><div class="notch"></div></div>
+    <div class="modal-screen">
+      <div class="top-bar">
+        <button class="icon-btn" onclick="closeModal('goal')" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        <div class="top-title" id="goal-modal-title">Add goal</div>
+        <button class="icon-btn" id="goal-delete-btn" style="display:none;" onclick="deleteGoal()"><svg viewBox="0 0 24 24" fill="none" stroke="#F87171" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
+      </div>
+      <div class="field">
+        <label class="field-label">Goal name</label>
+        <input type="text" id="goal-name" class="field-input" placeholder="e.g. Emergency Fund, Robinhood" />
+      </div>
+      <div class="field">
+        <label class="field-label">Bucket</label>
+        <select id="goal-bucket" class="field-select">
+          <option value="investing">Investing</option>
+          <option value="stability">Stability</option>
+          <option value="fun">Fun</option>
+        </select>
+      </div>
+      <div class="field-row">
+        <div>
+          <label class="field-label">Current amount</label>
+          <div class="field-input-row">
+            <span class="field-prefix">$</span>
+            <input type="number" id="goal-current" class="field-input mono" step="0.01" placeholder="0" />
+          </div>
+        </div>
+        <div>
+          <label class="field-label">Target</label>
+          <div class="field-input-row">
+            <span class="field-prefix">$</span>
+            <input type="number" id="goal-target" class="field-input mono" step="0.01" placeholder="0" />
+          </div>
+        </div>
+      </div>
+      <div class="field">
+        <label class="field-label">Label (optional)</label>
+        <input type="text" id="goal-label" class="field-input" placeholder="e.g. YTD, this year" />
+      </div>
+      <button class="save-btn" onclick="saveGoal()">Save goal</button>
+    </div>
+  </div>
+</div>
+
+<!-- CARD MODAL -->
+<div class="modal-overlay" id="card-modal" onclick="if(event.target===this)closeModal('card')">
+  <div class="modal-sheet">
+    <div class="notch-row"><div class="notch"></div></div>
+    <div class="modal-screen">
+      <div class="top-bar">
+        <button class="icon-btn" onclick="closeModal('card')" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        <div class="top-title" id="card-modal-title">Add card</div>
+        <button class="icon-btn" id="card-delete-btn" style="display:none;" onclick="deleteCard()"><svg viewBox="0 0 24 24" fill="none" stroke="#F87171" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
+      </div>
+      <div class="field">
+        <label class="field-label">Card name</label>
+        <input type="text" id="card-name" class="field-input" placeholder="e.g. Discover It, Freedom Flex" />
+      </div>
+      <div class="field-row">
+        <div>
+          <label class="field-label">Last 4 digits</label>
+          <input type="text" id="card-last4" class="field-input mono" maxlength="4" placeholder="0000" />
+        </div>
+        <div>
+          <label class="field-label">Network</label>
+          <select id="card-network" class="field-select">
+            <option value="VISA">Visa</option>
+            <option value="MASTERCARD">Mastercard</option>
+            <option value="AMEX">Amex</option>
+            <option value="DISCOVER">Discover</option>
+            <option value="DEBIT">Debit</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label class="field-label">Color</label>
+        <div class="color-grid" id="card-color-grid"></div>
+      </div>
+      <div class="field">
+        <label class="field-label">Current bonus category (optional)</label>
+        <input type="text" id="card-bonus" class="field-input" placeholder="e.g. 5% Gas this quarter" />
+      </div>
+      <button class="save-btn" onclick="saveCard()">Save card</button>
+    </div>
+  </div>
+</div>
+
+<!-- INCOME MODAL -->
+<div class="modal-overlay" id="income-modal" onclick="if(event.target===this)closeModal('income')">
+  <div class="modal-sheet">
+    <div class="notch-row"><div class="notch"></div></div>
+    <div class="modal-screen">
+      <div class="top-bar">
+        <button class="icon-btn" onclick="closeModal('income')" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        <div class="top-title" id="income-modal-title">Log income</div>
+        <button class="icon-btn" id="income-delete-btn" style="display:none;" onclick="deleteIncome()"><svg viewBox="0 0 24 24" fill="none" stroke="#F87171" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
+      </div>
+      <div class="field">
+        <label class="field-label">Source</label>
+        <select id="income-source" class="field-select">
+          <option value="Co-op">Co-op (Tri-State)</option>
+          <option value="Tips">Tips / service</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <div class="field">
+        <label class="field-label">Deposit amount</label>
+        <div class="field-input-row">
+          <span class="field-prefix">$</span>
+          <input type="number" id="income-amount" class="field-input mono" step="0.01" placeholder="0.00" />
+        </div>
+        <div class="field-help">What actually hit your account</div>
+      </div>
+      <div class="field">
+        <label class="field-label">Deposit date</label>
+        <input type="date" id="income-date" class="field-input mono" />
+        <div class="field-help">When the money landed in checking</div>
+      </div>
+      <div class="field">
+        <label class="field-label">Notes (optional)</label>
+        <input type="text" id="income-note" class="field-input" placeholder="e.g. paycheck for week of Jun 1-7" />
+      </div>
+      <button class="save-btn" onclick="saveIncome()">Save income</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+  <span id="toast-text"></span>
+</div>
+
+<script>
+// ============= STATE =============
+const BUCKET_COLORS = { bills: '#FBBF24', investing: '#34D399', stability: '#60A5FA', fun: '#F472B6' };
+const CARD_COLORS = ['#FF6000', '#0E1E40', '#1E40AF', '#D4A752', '#0891B2', '#10B981', '#7C3AED', '#0F0F0F'];
+const BUCKET_LABELS = { bills: 'Bills', investing: 'Investing', stability: 'Stability', fun: 'Fun' };
+const VERB_BY_BUCKET = { bills: 'Spent on', investing: 'Contributed', stability: 'Saved', fun: 'Spent on' };
+const CATEGORIES = [
+  { name: 'Groceries', bucket: 'bills' },
+  { name: 'Gas', bucket: 'bills' },
+  { name: 'Utilities', bucket: 'bills' },
+  { name: 'Health', bucket: 'bills' },
+  { name: 'Coffee', bucket: 'fun' },
+  { name: 'Eating out', bucket: 'fun' },
+  { name: 'Bars', bucket: 'fun' },
+  { name: 'Betting', bucket: 'fun' },
+  { name: 'Subs', bucket: 'fun' },
+  { name: 'Shopping', bucket: 'fun' },
+  { name: 'Misc', bucket: 'fun' },
+  { name: 'Investing', bucket: 'investing' },
+  { name: 'Stability', bucket: 'stability' }
+];
+
+let state = {
+  cycle: { start: '', end: '', startingBalance: 0 },
+  allocation: { bills: 0, investing: 0, stability: 0, fun: 0 },
+  bills: [],
+  goals: [],
+  cards: [],
+  transactions: [],
+  income: []
+};
+
+let ui = {
+  currentPage: 'home',
+  homeSelectedBucket: 'fun',
+  selectedCard: null,
+  modal: { amount: '', category: null, categoryBucket: null, paymentCard: null, paymentName: null, dateOffset: 0 },
+  editing: { bill: null, goal: null, card: null, income: null },
+  cardColor: CARD_COLORS[0]
+};
+
+// ============= STORAGE =============
+const STORAGE_STATE = 'pulse_state_v2';
+const STORAGE_SETTINGS = 'pulse_settings_v1';
+
+function loadFromStorage() {
+  try {
+    const saved = localStorage.getItem(STORAGE_STATE);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (parsed.cycle) state.cycle = { ...state.cycle, ...parsed.cycle };
+      if (parsed.allocation) state.allocation = { ...state.allocation, ...parsed.allocation };
+      if (Array.isArray(parsed.bills)) state.bills = parsed.bills;
+      if (Array.isArray(parsed.goals)) state.goals = parsed.goals;
+      if (Array.isArray(parsed.cards)) state.cards = parsed.cards;
+      if (Array.isArray(parsed.transactions)) state.transactions = parsed.transactions;
+      if (Array.isArray(parsed.income)) state.income = parsed.income;
+    }
+  } catch (e) { console.error('Load failed', e); }
+}
+function saveToStorage() {
+  try { localStorage.setItem(STORAGE_STATE, JSON.stringify(state)); }
+  catch (e) { console.error('Save failed', e); }
+}
+function getSettings() {
+  try {
+    const s = localStorage.getItem(STORAGE_SETTINGS);
+    if (s) return JSON.parse(s);
+  } catch {}
+  return { sheetUrl: '', lastSynced: null, autoMonday: true, autoPush: true };
+}
+function saveSettings(s) { localStorage.setItem(STORAGE_SETTINGS, JSON.stringify(s)); }
+
+// ============= HELPERS =============
+function uid() { return Math.random().toString(36).slice(2, 10); }
+function todayStr() { const d = new Date(); return d.toISOString().slice(0, 10); }
+function addDays(dateStr, n) { const d = new Date(dateStr); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10); }
+function daysBetween(a, b) { return Math.round((new Date(b) - new Date(a)) / 86400000); }
+function fmtMoney(n, signed) {
+  const abs = Math.abs(n);
+  const sign = n < 0 ? '−' : (signed && n > 0 ? '+' : '');
+  return sign + '$' + abs.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+}
+function fmtMoneyExact(n) {
+  return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  document.getElementById('toast-text').textContent = msg;
+  t.classList.add('show');
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(() => t.classList.remove('show'), 2400);
+}
+function isInCycle(dateStr) {
+  if (!state.cycle.start || !state.cycle.end) return true;
+  return dateStr >= state.cycle.start && dateStr <= state.cycle.end;
+}
+
+// ============= COMPUTED =============
+function spentByBucket() {
+  const sums = { bills: 0, investing: 0, stability: 0, fun: 0 };
+  state.transactions.forEach(t => {
+    if (t.amount > 0 && isInCycle(t.date) && sums[t.bucket] !== undefined) {
+      sums[t.bucket] += t.amount;
+    }
+  });
+  return sums;
+}
+function incomeInCycle() {
+  return state.income.filter(i => isInCycle(i.date)).reduce((s, i) => s + i.amount, 0);
+}
+function fundedByBucket() {
+  const income = incomeInCycle();
+  const a = state.allocation;
+  let remaining = income;
+  const funded = { bills: 0, investing: 0, stability: 0, fun: 0 };
+  funded.bills = Math.min(remaining, a.bills); remaining -= funded.bills;
+  funded.investing = Math.min(remaining, a.investing); remaining -= funded.investing;
+  funded.stability = Math.min(remaining, a.stability); remaining -= funded.stability;
+  funded.fun = Math.min(remaining, a.fun); remaining -= funded.fun;
+  return funded;
+}
+function currentlyFundingBucket() {
+  const f = fundedByBucket();
+  const a = state.allocation;
+  if (f.bills < a.bills) return 'bills';
+  if (f.investing < a.investing) return 'investing';
+  if (f.stability < a.stability) return 'stability';
+  if (f.fun < a.fun) return 'fun';
+  return null;
+}
+function currentBalance() {
+  const start = state.cycle.startingBalance || 0;
+  const income = incomeInCycle();
+  let spent = 0;
+  state.transactions.forEach(t => {
+    if (isInCycle(t.date)) {
+      spent += t.amount;
+    }
+  });
+  return start + income - spent;
+}
+
+// ============= PAGE NAV =============
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.page === name));
+  ui.currentPage = name;
+  renderPage(name);
+}
+function renderPage(name) {
+  if (name === 'home') renderHome();
+  else if (name === 'funding') renderFunding();
+  else if (name === 'bills') renderBills();
+  else if (name === 'cards') renderCards();
+  else if (name === 'log') renderLog();
+}
+function renderAll() {
+  renderPage(ui.currentPage);
+}
+
+// ============= HOME =============
+function renderHome() {
+  const a = state.allocation;
+  const totalAlloc = a.bills + a.investing + a.stability + a.fun;
+  const spent = spentByBucket();
+  const balance = currentBalance();
+  const cycleStart = state.cycle.start || todayStr();
+  const cycleEnd = state.cycle.end || todayStr();
+  const daysLeft = state.cycle.end ? Math.max(0, daysBetween(todayStr(), state.cycle.end)) : 0;
+  const delta = balance - (state.cycle.startingBalance || 0);
+
+  let segments = '';
+  const C = 565.487;
+  let offset = 0;
+  if (totalAlloc > 0) {
+    ['bills', 'investing', 'stability', 'fun'].forEach(b => {
+      const pct = a[b] / totalAlloc;
+      const len = pct * C;
+      const isActive = b === ui.homeSelectedBucket;
+      segments += `<circle class="seg ${isActive ? 'active' : 'dim'}" cx="120" cy="120" r="90" fill="none"
+        stroke="${BUCKET_COLORS[b]}" stroke-width="${isActive ? 28 : 22}"
+        stroke-dasharray="${len} ${C}" stroke-dashoffset="${-offset}"
+        data-bucket="${b}" onclick="selectHomeBucket('${b}')" />`;
+      offset += len;
+    });
+  } else {
+    segments = `<circle cx="120" cy="120" r="90" fill="none" stroke="#1A1F2A" stroke-width="22"/>`;
+  }
+
+  const sel = ui.homeSelectedBucket;
+  const selSpent = spent[sel] || 0;
+  const selTarget = a[sel] || 0;
+  const selRemaining = Math.max(0, selTarget - selSpent);
+  const selColor = BUCKET_COLORS[sel];
+  const centerLabel = totalAlloc > 0 ? `${VERB_BY_BUCKET[sel]} ${BUCKET_LABELS[sel]}` : 'Set up your cycle';
+  const centerBig = totalAlloc > 0 ? fmtMoney(selSpent) : '$0';
+  const centerSub = totalAlloc > 0 ? `of ${fmtMoney(selTarget)} · ${fmtMoney(selRemaining)} left` : 'tap the gear to start';
+
+  const hasData = totalAlloc > 0 || state.transactions.length > 0;
+  const cycleLabel = state.cycle.start ? `${state.cycle.start} → ${state.cycle.end}` : 'No cycle set';
+
+  document.getElementById('page-home').innerHTML = `
+    <div class="header">
+      <div>
+        <div style="text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; color: var(--text-tertiary); font-size: 10px;">Cycle</div>
+        <div style="font-size: 14px; font-weight: 600; margin-top: 2px;" class="num">${cycleLabel}</div>
+      </div>
+      <button class="icon-btn" onclick="openSettings()" aria-label="Settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </button>
+    </div>
+    <div class="ring-wrap">
+      <svg class="ring" viewBox="0 0 240 240">
+        <g transform="rotate(-90 120 120)">${segments}</g>
+        <text x="120" y="98" text-anchor="middle" fill="${selColor}" font-size="11" font-weight="600">${centerLabel}</text>
+        <text class="num" x="120" y="138" text-anchor="middle" fill="#E8EAED" font-size="40" font-weight="600">${centerBig}</text>
+        <text class="num" x="120" y="158" text-anchor="middle" fill="#9CA3AF" font-size="11">${centerSub}</text>
+      </svg>
+    </div>
+    ${totalAlloc > 0 ? '<div class="ring-hint">Tap a segment to switch</div>' : ''}
+    <div class="legend">
+      ${['bills', 'investing', 'stability', 'fun'].map(b => `
+        <div class="legend-row ${b === sel ? 'active-' + b : 'dim'}" onclick="selectHomeBucket('${b}')">
+          <div class="dot" style="background: ${BUCKET_COLORS[b]};"></div>
+          <div class="legend-name" style="${b === sel ? `color: ${BUCKET_COLORS[b]};` : ''}">${BUCKET_LABELS[b]}</div>
+          <div class="legend-amount num">${fmtMoney(spent[b])}</div>
+        </div>
+      `).join('')}
+    </div>
+    <div class="stat-card">
+      <div class="stat-row">
+        <div>
+          <div class="stat-label">Checking</div>
+          <div class="stat-value num">${fmtMoneyExact(balance)}</div>
+        </div>
+        <div class="stat-side">
+          <div class="stat-label">vs cycle start</div>
+          <div class="stat-delta num ${delta >= 0 ? 'delta-pos' : 'delta-neg'}">${fmtMoney(delta, true)}</div>
+        </div>
+      </div>
+    </div>
+    ${renderNextBillPreview()}
+    <div class="spacer"></div>
+    <div class="fab-row">
+      <button class="fab" onclick="openEntry()" aria-label="Log transaction">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </button>
+    </div>
+  `;
+}
+function selectHomeBucket(b) {
+  ui.homeSelectedBucket = b;
+  renderHome();
+}
+function renderNextBillPreview() {
+  const today = todayStr();
+  const upcoming = state.bills.filter(b => b.nextDate >= today).sort((a, b) => a.nextDate.localeCompare(b.nextDate))[0];
+  if (!upcoming) return '';
+  const days = daysBetween(today, upcoming.nextDate);
+  const dayLabel = days === 0 ? 'today' : days === 1 ? 'tomorrow' : `in ${days} days`;
+  return `
+    <div class="bill-preview" onclick="showPage('bills')">
+      <div class="bill-preview-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      </div>
+      <div class="bill-preview-info">
+        <div class="bill-preview-name">${upcoming.name}</div>
+        <div class="bill-preview-meta">${dayLabel} · ${upcoming.payment || 'auto-pay'}</div>
+      </div>
+      <div class="bill-preview-amount num">${fmtMoney(upcoming.amount)}</div>
+    </div>
+  `;
+}
+
+// ============= FUNDING =============
+function renderFunding() {
+  const a = state.allocation;
+  const totalTarget = a.bills + a.investing + a.stability + a.fun;
+  const income = incomeInCycle();
+  const funded = fundedByBucket();
+  const fundingBucket = currentlyFundingBucket();
+  const pct = totalTarget > 0 ? Math.round((income / totalTarget) * 100) : 0;
+
+  let segments = '';
+  const C = 502.654;
+  if (totalTarget > 0) {
+    let off = 0;
+    ['bills', 'investing', 'stability', 'fun'].forEach(b => {
+      const len = (a[b] / totalTarget) * C;
+      segments += `<circle cx="110" cy="110" r="80" fill="none" stroke="${BUCKET_COLORS[b]}" stroke-width="20" stroke-opacity="0.18" stroke-dasharray="${len} ${C}" stroke-dashoffset="${-off}"/>`;
+      off += len;
+    });
+    off = 0;
+    ['bills', 'investing', 'stability', 'fun'].forEach(b => {
+      const targetLen = (a[b] / totalTarget) * C;
+      const fundedLen = a[b] > 0 ? (funded[b] / a[b]) * targetLen : 0;
+      if (fundedLen > 0) {
+        segments += `<circle cx="110" cy="110" r="80" fill="none" stroke="${BUCKET_COLORS[b]}" stroke-width="20" stroke-dasharray="${fundedLen} ${C}" stroke-dashoffset="${-off}"/>`;
+      }
+      off += targetLen;
+    });
+  }
+
+  const bucketCards = ['bills', 'investing', 'stability', 'fun'].map(b => {
+    const target = a[b];
+    const fundedAmt = funded[b];
+    const bPct = target > 0 ? Math.round((fundedAmt / target) * 100) : 0;
+    const status = target === 0 ? 'Not set' : fundedAmt >= target ? 'Funded' : fundedAmt > 0 ? `In progress · ${bPct}%` : 'Pending';
+    const statusClass = fundedAmt >= target && target > 0 ? 'status-funded' : fundedAmt > 0 ? 'status-progress' : 'status-pending';
+    const isActive = b === fundingBucket;
+    const goals = state.goals.filter(g => g.bucket === b);
+
+    let goalsHtml = '';
+    goals.forEach(g => {
+      const gPct = g.target > 0 ? Math.round((g.current / g.target) * 100) : 0;
+      const labelSuffix = g.label ? ` ${g.label}` : '';
+      goalsHtml += `
+        <div class="bucket-goal">
+          <div class="goal-header">
+            <div class="goal-icon-wrap" style="background: ${BUCKET_COLORS[b]}26; color: ${BUCKET_COLORS[b]};">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </div>
+            <div class="goal-info">
+              <div class="goal-name">${g.name}</div>
+              <div class="goal-meta num">${fmtMoney(g.current)} of ${fmtMoney(g.target)}${labelSuffix} · ${gPct}%</div>
+            </div>
+            <button class="goal-edit" onclick="openGoal('${g.id}')" aria-label="Edit goal">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+            </button>
+          </div>
+          <div class="goal-bar-row">
+            <div class="progress-bar"><div class="progress-fill" style="background: ${BUCKET_COLORS[b]}; width: ${Math.min(gPct, 100)}%;"></div></div>
+          </div>
+        </div>
+      `;
+    });
+
+    return `
+      <div class="bucket" style="${isActive ? 'border-color: ' + BUCKET_COLORS[b] + '40;' : ''}">
+        <div class="bucket-top">
+          <div class="bucket-dot" style="background: ${BUCKET_COLORS[b]};"></div>
+          <div class="bucket-name">${BUCKET_LABELS[b]}</div>
+          <div class="bucket-status ${statusClass}">
+            ${fundedAmt >= target && target > 0 ? '<svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>' : ''}
+            ${status}
+          </div>
+        </div>
+        <div class="bucket-progress-row">
+          <div class="progress-bar"><div class="progress-fill" style="background: ${BUCKET_COLORS[b]}; width: ${Math.min(bPct, 100)}%;"></div></div>
+          <div class="bucket-amount num">${fmtMoney(fundedAmt)} / ${fmtMoney(target)}</div>
+        </div>
+        ${goalsHtml}
+      </div>
+    `;
+  }).join('');
+
+  document.getElementById('page-funding').innerHTML = `
+    <div class="header">
+      <div>
+        <div class="title">Funding</div>
+        <div class="subtitle num">${state.cycle.start ? state.cycle.start + ' → ' + state.cycle.end : 'No cycle set'}</div>
+      </div>
+      <button class="icon-btn accent-investing" onclick="openIncome()" aria-label="Add income">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </button>
+    </div>
+    <div class="ring-wrap">
+      <svg width="220" height="220" viewBox="0 0 220 220">
+        <g transform="rotate(-90 110 110)">${segments || '<circle cx="110" cy="110" r="80" fill="none" stroke="#1A1F2A" stroke-width="20"/>'}</g>
+        <text x="110" y="100" text-anchor="middle" fill="#9CA3AF" font-size="10" font-weight="600">EARNED</text>
+        <text class="num" x="110" y="132" text-anchor="middle" fill="#E8EAED" font-size="32" font-weight="600">${fmtMoney(income)}</text>
+        <text class="num" x="110" y="152" text-anchor="middle" fill="#6B7280" font-size="10">of ${fmtMoney(totalTarget)} · ${pct}%</text>
+      </svg>
+    </div>
+    ${fundingBucket ? `<div class="currently-funding">↓ Currently funding ${BUCKET_LABELS[fundingBucket]}</div>` : ''}
+    <div class="bucket-list">${bucketCards}</div>
+    <div style="display: flex; gap: 8px; margin-bottom: 14px;">
+      <button class="save-btn subtle" onclick="openGoal()" style="margin-top: 0;">+ Add goal</button>
+    </div>
+    <div class="spacer"></div>
+  `;
+}
+
+// ============= BILLS =============
+function renderBills() {
+  const today = todayStr();
+  state.bills.forEach(b => {
+    if (b.nextDate < today && !b.paidDates) b.paidDates = [];
+  });
+  const cycleStart = state.cycle.start || today;
+  const cycleEnd = state.cycle.end || today;
+
+  const inCycle = state.bills.filter(b => b.nextDate >= cycleStart && b.nextDate <= cycleEnd);
+  const upcoming = inCycle.filter(b => b.nextDate >= today).sort((a, b) => a.nextDate.localeCompare(b.nextDate));
+  const paid = state.bills.filter(b => b.paidDates && b.paidDates.some(d => d >= cycleStart && d <= cycleEnd));
+
+  const cycleTotal = inCycle.reduce((s, b) => s + b.amount, 0) + paid.reduce((s, b) => s + b.amount, 0);
+  const paidTotal = paid.reduce((s, b) => s + b.amount, 0);
+  const upcomingTotal = upcoming.reduce((s, b) => s + b.amount, 0);
+  const totalPct = cycleTotal > 0 ? Math.round((paidTotal / cycleTotal) * 100) : 0;
+
+  const upcomingHtml = upcoming.length === 0 ? '' : `
+    <div class="section-label">Coming up</div>
+    <div class="bill-list">
+      ${upcoming.map((b, i) => {
+        const days = daysBetween(today, b.nextDate);
+        const soon = days <= 3;
+        const dayLabel = days === 0 ? 'today' : days === 1 ? 'in 1 day' : `in ${days} days`;
+        return `
+          <div class="bill ${soon ? 'upcoming-soon' : ''}" onclick="openBill('${b.id}')">
+            <div class="bill-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+            <div class="bill-info">
+              <div class="bill-name">${b.name}</div>
+              <div class="bill-meta"><span class="freq-pill">${b.freq.toUpperCase()}</span><span>${b.payment || 'auto-pay'}</span></div>
+            </div>
+            <div class="bill-right">
+              <div class="bill-amount num">${fmtMoney(b.amount)}</div>
+              <div class="bill-status-label ${soon ? 'due-soon' : 'due-later'}">${dayLabel}</div>
+            </div>
+          </div>
+        `;
+      }).join('')}
+    </div>
+  `;
+
+  const paidHtml = paid.length === 0 ? '' : `
+    <div class="section-label">Paid this cycle</div>
+    <div class="bill-list">
+      ${paid.map(b => `
+        <div class="bill paid-bill" onclick="openBill('${b.id}')">
+          <div class="bill-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+          <div class="bill-info">
+            <div class="bill-name">${b.name}</div>
+            <div class="bill-meta"><span class="freq-pill">${b.freq.toUpperCase()}</span><span>${b.payment || 'auto-pay'}</span></div>
+          </div>
+          <div class="bill-right">
+            <div class="bill-amount num">${fmtMoney(b.amount)}</div>
+            <div class="bill-status-label paid-mark"><svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>Paid</div>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+
+  const empty = state.bills.length === 0 ? `
+    <div class="empty-state">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      <div class="empty-title">No bills yet</div>
+      <div class="empty-desc">Add recurring bills (rent, phone, subscriptions) so Pulse can lock that money first each cycle.</div>
+      <button class="empty-btn" onclick="openBill()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add your first bill</button>
+    </div>
+  ` : '';
+
+  const summary = state.bills.length > 0 ? `
+    <div class="summary-card">
+      <div class="summary-row">
+        <div>
+          <div class="stat-label">Cycle total</div>
+          <div class="summary-total num">${fmtMoney(cycleTotal)}</div>
+        </div>
+        <div class="summary-side">
+          <div><span class="paid num">${fmtMoney(paidTotal)}</span> paid</div>
+          <div style="margin-top: 4px;"><span class="pending num">${fmtMoney(upcomingTotal)}</span> upcoming</div>
+        </div>
+      </div>
+      <div class="progress-bar" style="height: 6px;"><div class="progress-fill bills-progress-fill" style="width: ${totalPct}%;"></div></div>
+    </div>
+  ` : '';
+
+  document.getElementById('page-bills').innerHTML = `
+    <div class="header">
+      <div>
+        <div class="title">Bills</div>
+        <div class="subtitle num">${state.bills.length} recurring</div>
+      </div>
+      <button class="icon-btn accent-bills" onclick="openBill()" aria-label="Add bill">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </button>
+    </div>
+    ${summary}
+    ${empty}
+    ${upcomingHtml}
+    ${paidHtml}
+    <div class="spacer"></div>
+  `;
+}
+
+// ============= CARDS =============
+function renderCards() {
+  if (state.cards.length === 0) {
+    document.getElementById('page-cards').innerHTML = `
+      <div class="header">
+        <div>
+          <div class="title">Cards</div>
+          <div class="subtitle">0 cards</div>
+        </div>
+        <button class="icon-btn" onclick="openCard()" aria-label="Add card">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </button>
+      </div>
+      <div class="empty-state">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="6" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+        <div class="empty-title">No cards yet</div>
+        <div class="empty-desc">Add your debit and credit cards. Pulse tracks spending per card and flags missed cashback opportunities.</div>
+        <button class="empty-btn" onclick="openCard()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add your first card</button>
+      </div>
+      <div class="spacer"></div>
+    `;
+    return;
+  }
+
+  if (!ui.selectedCard || !state.cards.find(c => c.id === ui.selectedCard)) {
+    ui.selectedCard = state.cards[0].id;
+  }
+  const card = state.cards.find(c => c.id === ui.selectedCard);
+  const cardTxs = state.transactions.filter(t => t.cardId === card.id && t.amount > 0);
+  const cardSpent = cardTxs.reduce((s, t) => s + t.amount, 0);
+  const totalBalance = state.cards.reduce((s, c) => {
+    const txs = state.transactions.filter(t => t.cardId === c.id && t.amount > 0);
+    return s + txs.reduce((sum, t) => sum + t.amount, 0);
+  }, 0);
+
+  const byCategory = {};
+  cardTxs.forEach(t => {
+    if (!byCategory[t.cat]) byCategory[t.cat] = { amount: 0, bucket: t.bucket };
+    byCategory[t.cat].amount += t.amount;
+  });
+  const breakdown = Object.entries(byCategory)
+    .sort((a, b) => b[1].amount - a[1].amount)
+    .slice(0, 5);
+  const breakdownTotal = breakdown.reduce((s, [_, v]) => s + v.amount, 0);
+
+  const tabs = state.cards.map(c => `
+    <div class="card-tab ${c.id === ui.selectedCard ? 'active' : ''}" onclick="selectCard('${c.id}')">
+      <div class="tab-dot" style="background: ${c.color};"></div>
+      ${c.name}
+    </div>
+  `).join('');
+
+  const isDark = card.color === '#0F0F0F' || card.color === '#0E1E40' || card.color === '#1E40AF' || card.color === '#7C3AED';
+  const textColor = isDark ? '#DDE4F0' : '#1A1410';
+  const chipBg = isDark ? 'rgba(255,255,255,0.18)' : 'rgba(0,0,0,0.18)';
+
+  document.getElementById('page-cards').innerHTML = `
+    <div class="header">
+      <div>
+        <div class="title">Cards</div>
+        <div class="subtitle num">${state.cards.length} card${state.cards.length === 1 ? '' : 's'}${totalBalance > 0 ? ' · ' + fmtMoney(totalBalance) + ' balance' : ''}</div>
+      </div>
+      <button class="icon-btn" onclick="openCard()" aria-label="Add card">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </button>
+    </div>
+    <div class="card-tabs">${tabs}</div>
+    <div class="credit-card" style="background: ${card.color}; color: ${textColor};" onclick="openCard('${card.id}')">
+      <div class="card-top">
+        <div class="card-network">${card.network}</div>
+        <div class="card-chip" style="background: ${chipBg}; border: 1px solid ${chipBg};"></div>
+      </div>
+      <div>
+        <div class="card-name">${card.name}</div>
+        <div class="card-num num">•••• ${card.last4 || '0000'}</div>
+      </div>
+      <div class="card-bottom">
+        <div class="card-holder">LOGAN MAHAM</div>
+        <div class="card-expires num">${card.exp || ''}</div>
+      </div>
+    </div>
+    ${card.bonus ? `<div class="bonus-banner"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>${card.bonus}</div>` : ''}
+    <div class="stat-grid">
+      <div class="stat-tile">
+        <div class="stat-tile-label">This cycle</div>
+        <div class="stat-tile-value num">${fmtMoney(cardSpent)}</div>
+        <div class="stat-tile-meta">${cardTxs.length} transaction${cardTxs.length === 1 ? '' : 's'}</div>
+      </div>
+      <div class="stat-tile">
+        <div class="stat-tile-label">Network</div>
+        <div class="stat-tile-value">${card.network}</div>
+        <div class="stat-tile-meta">${card.last4 ? '•••• ' + card.last4 : ''}</div>
+      </div>
+    </div>
+    ${breakdown.length > 0 ? `
+      <div class="section-label">Categories on this card</div>
+      <div class="breakdown">
+        ${breakdown.map(([cat, v]) => {
+          const pct = breakdownTotal > 0 ? Math.round((v.amount / breakdownTotal) * 100) : 0;
+          return `
+            <div class="breakdown-row">
+              <div class="bd-name">${cat}</div>
+              <div class="bd-bar"><div class="bd-fill" style="background: ${BUCKET_COLORS[v.bucket] || '#6B7280'}; width: ${pct}%;"></div></div>
+              <div class="bd-amount num">${fmtMoney(v.amount)}</div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    ` : ''}
+    <div class="spacer"></div>
+  `;
+}
+function selectCard(id) {
+  ui.selectedCard = id;
+  renderCards();
+}
+
+// ============= LOG =============
+function renderLog() {
+  const txs = state.transactions.slice().sort((a, b) => {
+    if (a.date !== b.date) return b.date.localeCompare(a.date);
+    return (b.time || '').localeCompare(a.time || '');
+  });
+
+  if (txs.length === 0) {
+    document.getElementById('page-log').innerHTML = `
+      <div class="header">
+        <div>
+          <div class="title">Log</div>
+          <div class="subtitle">0 entries</div>
+        </div>
+        <button class="icon-btn" aria-label="Search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        </button>
+      </div>
+      <div class="empty-state">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+        <div class="empty-title">No transactions yet</div>
+        <div class="empty-desc">Tap the + button to log your first transaction.</div>
+        <button class="empty-btn" onclick="openEntry()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Log first transaction</button>
+      </div>
+      <div class="spacer"></div>
+      <div class="fab-row">
+        <button class="fab" onclick="openEntry()" aria-label="Log transaction">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </button>
+      </div>
+    `;
+    return;
+  }
+
+  // Group by date
+  const groups = {};
+  txs.forEach(t => {
+    if (!groups[t.date]) groups[t.date] = [];
+    groups[t.date].push(t);
+  });
+
+  const today = todayStr();
+  const yesterday = addDays(today, -1);
+  let groupsHtml = '';
+  Object.keys(groups).sort((a, b) => b.localeCompare(a)).forEach(date => {
+    let label = date;
+    if (date === today) label = 'Today · ' + new Date(date).toDateString().slice(0, 10);
+    else if (date === yesterday) label = 'Yesterday · ' + new Date(date).toDateString().slice(0, 10);
+    const dayTxs = groups[date];
+    const dayTotal = dayTxs.filter(t => t.amount > 0).reduce((s, t) => s + t.amount, 0);
+    groupsHtml += `
+      <div class="day-header">
+        <div class="day-label">${label}</div>
+        <div class="day-total num">${fmtMoney(dayTotal)}</div>
+      </div>
+      <div class="tx-list">
+        ${dayTxs.map(t => `
+          <div class="tx">
+            <div class="tx-icon ic-${t.bucket}-bg">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>
+            </div>
+            <div class="tx-info">
+              <div class="tx-merchant">${t.merchant || t.cat}</div>
+              <div class="tx-meta">
+                <span class="cat-tag cat-${t.bucket}">${t.cat}</span>
+                ${t.payment ? `<span class="meta-dot"></span><span>${t.payment}</span>` : ''}
+              </div>
+            </div>
+            <div class="tx-right">
+              <div class="tx-amount num">−${fmtMoneyExact(t.amount)}</div>
+              <div class="tx-time">${t.time || ''}</div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  });
+
+  const totalSpent = txs.filter(t => t.amount > 0 && isInCycle(t.date)).reduce((s, t) => s + t.amount, 0);
+
+  document.getElementById('page-log').innerHTML = `
+    <div class="header">
+      <div>
+        <div class="title">Log</div>
+        <div class="subtitle num">${txs.length} entries · ${fmtMoney(totalSpent)} this cycle</div>
+      </div>
+      <button class="icon-btn" aria-label="Search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </button>
+    </div>
+    ${groupsHtml}
+    <div class="spacer"></div>
+    <div class="fab-row">
+      <button class="fab" onclick="openEntry()" aria-label="Log transaction">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </button>
+    </div>
+  `;
+}
+
+// ============= MODAL HELPERS =============
+function openModalEl(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(name) { document.getElementById(name + '-modal').classList.remove('open'); }
+
+// ============= ENTRY =============
+function openEntry() {
+  ui.modal = { amount: '', category: null, categoryBucket: null, paymentCard: null, paymentName: null, dateOffset: 0 };
+  document.getElementById('amount-val').textContent = '0';
+  document.getElementById('entry-date-label').textContent = 'Today';
+  // Render category chips
+  document.getElementById('category-chips').innerHTML = CATEGORIES.map(c =>
+    `<div class="chip" data-cat="${c.name}" data-bucket="${c.bucket}" onclick="selectCategory('${c.name}', '${c.bucket}', this)">
+      <div class="chip-dot" style="background: ${BUCKET_COLORS[c.bucket]};"></div>${c.name}
+    </div>`
+  ).join('');
+  // Render payment chips
+  const paymentChips = state.cards.map(c =>
+    `<div class="chip" data-card="${c.id}" onclick="selectPayment('${c.id}', '${c.name}', this)">
+      <div class="chip-dot" style="background: ${c.color};"></div>${c.name}
+    </div>`
+  ).join('') + `<div class="chip" data-card="cash" onclick="selectPayment('cash', 'Cash', this)"><div class="chip-dot" style="background: #34D399;"></div>Cash</div>`;
+  document.getElementById('payment-chips').innerHTML = paymentChips || '<div style="font-size: 11px; color: var(--text-tertiary); padding: 8px;">Add a card in the Cards tab to enable card payments</div>' + `<div class="chip" data-card="cash" onclick="selectPayment('cash', 'Cash', this)"><div class="chip-dot" style="background: #34D399;"></div>Cash</div>`;
+  // Render keypad
+  const keys = ['1','2','3','4','5','6','7','8','9','.','0','back'];
+  document.getElementById('keypad').innerHTML = keys.map(k =>
+    k === 'back'
+      ? `<div class="key key-icon" onclick="appendKey('back')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/><line x1="18" y1="9" x2="12" y2="15"/><line x1="12" y1="9" x2="18" y2="15"/></svg></div>`
+      : `<div class="key" onclick="appendKey('${k}')">${k}</div>`
+  ).join('');
+  updateLogButton();
+  openModalEl('entry-modal');
+}
+function appendKey(k) {
+  if (k === 'back') ui.modal.amount = ui.modal.amount.slice(0, -1);
+  else if (k === '.') { if (!ui.modal.amount.includes('.')) ui.modal.amount += ui.modal.amount === '' ? '0.' : '.'; }
+  else {
+    if (ui.modal.amount.includes('.')) {
+      const dec = ui.modal.amount.split('.')[1];
+      if (dec && dec.length >= 2) return;
+    }
+    ui.modal.amount += k;
+  }
+  document.getElementById('amount-val').textContent = ui.modal.amount === '' ? '0' : ui.modal.amount;
+  updateLogButton();
+}
+function selectCategory(name, bucket, el) {
+  document.querySelectorAll('#category-chips .chip').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  ui.modal.category = name;
+  ui.modal.categoryBucket = bucket;
+  updateLogButton();
+}
+function selectPayment(id, name, el) {
+  document.querySelectorAll('#payment-chips .chip').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  ui.modal.paymentCard = id;
+  ui.modal.paymentName = name;
+  updateLogButton();
+}
+function cycleEntryDate() {
+  ui.modal.dateOffset = (ui.modal.dateOffset === 0) ? -1 : (ui.modal.dateOffset === -1) ? -2 : 0;
+  const labels = { 0: 'Today', '-1': 'Yesterday', '-2': '2 days ago' };
+  document.getElementById('entry-date-label').textContent = labels[ui.modal.dateOffset];
+}
+function updateLogButton() {
+  const btn = document.getElementById('log-btn');
+  const txt = document.getElementById('log-btn-text');
+  const sum = document.getElementById('log-btn-summary');
+  const ready = ui.modal.amount && parseFloat(ui.modal.amount) > 0 && ui.modal.category && ui.modal.paymentName;
+  btn.classList.remove('bills-color', 'fun-color', 'investing-color', 'stability-color');
+  btn.disabled = !ready;
+  if (ready) {
+    btn.classList.add(ui.modal.categoryBucket + '-color');
+    const amt = parseFloat(ui.modal.amount).toFixed(2);
+    txt.textContent = `Log $${amt} to ${ui.modal.category}`;
+    sum.textContent = `on ${ui.modal.paymentName} · ${document.getElementById('entry-date-label').textContent.toLowerCase()}`;
+  } else {
+    const missing = [];
+    if (!ui.modal.amount || parseFloat(ui.modal.amount) === 0) missing.push('amount');
+    if (!ui.modal.category) missing.push('category');
+    if (!ui.modal.paymentName) missing.push('payment');
+    txt.textContent = 'Log entry';
+    sum.textContent = 'add ' + missing.join(', ');
+  }
+}
+function logEntry() {
+  const amt = parseFloat(ui.modal.amount);
+  if (!amt || !ui.modal.category || !ui.modal.paymentName) return;
+  const now = new Date();
+  const date = addDays(todayStr(), ui.modal.dateOffset);
+  const hours = now.getHours();
+  const minutes = now.getMinutes();
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  const dh = hours % 12 || 12;
+  const time = `${dh}:${String(minutes).padStart(2,'0')} ${ampm}`;
+  const tx = {
+    id: uid(),
+    date, time,
+    merchant: ui.modal.category,
+    cat: ui.modal.category,
+    bucket: ui.modal.categoryBucket,
+    payment: ui.modal.paymentName,
+    cardId: ui.modal.paymentCard,
+    amount: amt
+  };
+  state.transactions.unshift(tx);
+  saveToStorage();
+  pushTransaction(tx);
+  closeModal('entry');
+  showToast(`Logged ${fmtMoney(amt)} to ${ui.modal.category}`);
+  renderAll();
+}
+
+// ============= BILL =============
+function openBill(id) {
+  ui.editing.bill = id || null;
+  const title = id ? 'Edit bill' : 'Add bill';
+  document.getElementById('bill-modal-title').textContent = title;
+  document.getElementById('bill-delete-btn').style.display = id ? '' : 'none';
+  const b = id ? state.bills.find(x => x.id === id) : null;
+  document.getElementById('bill-name').value = b ? b.name : '';
+  document.getElementById('bill-amount').value = b ? b.amount : '';
+  document.getElementById('bill-freq').value = b ? b.freq : 'monthly';
+  document.getElementById('bill-date').value = b ? b.nextDate : (state.cycle.start || todayStr());
+  // Populate payment dropdown
+  const paySelect = document.getElementById('bill-payment');
+  const opts = state.cards.map(c => `<option value="${c.name}">${c.name}</option>`).join('') + '<option value="Auto-pay">Auto-pay</option><option value="Cash">Cash</option><option value="Venmo">Venmo</option>';
+  paySelect.innerHTML = opts;
+  if (b) paySelect.value = b.payment || 'Auto-pay';
+  document.getElementById('bill-note').value = b ? (b.note || '') : '';
+  openModalEl('bill-modal');
+}
+function saveBill() {
+  const name = document.getElementById('bill-name').value.trim();
+  const amount = parseFloat(document.getElementById('bill-amount').value);
+  if (!name || !amount) { showToast('Name and amount required'); return; }
+  const data = {
+    name, amount,
+    freq: document.getElementById('bill-freq').value,
+    nextDate: document.getElementById('bill-date').value || todayStr(),
+    payment: document.getElementById('bill-payment').value,
+    note: document.getElementById('bill-note').value.trim(),
+    paidDates: []
+  };
+  if (ui.editing.bill) {
+    const i = state.bills.findIndex(x => x.id === ui.editing.bill);
+    state.bills[i] = { ...state.bills[i], ...data };
+    showToast(`Updated ${name}`);
+  } else {
+    state.bills.push({ id: uid(), ...data });
+    showToast(`Added ${name}`);
+  }
+  saveToStorage();
+  closeModal('bill');
+  renderAll();
+}
+function deleteBill() {
+  if (!confirm('Delete this bill?')) return;
+  state.bills = state.bills.filter(x => x.id !== ui.editing.bill);
+  saveToStorage();
+  closeModal('bill');
+  showToast('Bill deleted');
+  renderAll();
+}
+
+// ============= GOAL =============
+function openGoal(id) {
+  ui.editing.goal = id || null;
+  document.getElementById('goal-modal-title').textContent = id ? 'Edit goal' : 'Add goal';
+  document.getElementById('goal-delete-btn').style.display = id ? '' : 'none';
+  const g = id ? state.goals.find(x => x.id === id) : null;
+  document.getElementById('goal-name').value = g ? g.name : '';
+  document.getElementById('goal-bucket').value = g ? g.bucket : 'investing';
+  document.getElementById('goal-current').value = g ? g.current : '';
+  document.getElementById('goal-target').value = g ? g.target : '';
+  document.getElementById('goal-label').value = g ? (g.label || '') : '';
+  openModalEl('goal-modal');
+}
+function saveGoal() {
+  const name = document.getElementById('goal-name').value.trim();
+  if (!name) { showToast('Goal name required'); return; }
+  const data = {
+    name,
+    bucket: document.getElementById('goal-bucket').value,
+    current: parseFloat(document.getElementById('goal-current').value) || 0,
+    target: parseFloat(document.getElementById('goal-target').value) || 0,
+    label: document.getElementById('goal-label').value.trim()
+  };
+  if (ui.editing.goal) {
+    const i = state.goals.findIndex(x => x.id === ui.editing.goal);
+    state.goals[i] = { ...state.goals[i], ...data };
+    showToast(`Updated ${name}`);
+  } else {
+    state.goals.push({ id: uid(), ...data });
+    showToast(`Added ${name}`);
+  }
+  saveToStorage();
+  closeModal('goal');
+  renderAll();
+}
+function deleteGoal() {
+  if (!confirm('Delete this goal?')) return;
+  state.goals = state.goals.filter(x => x.id !== ui.editing.goal);
+  saveToStorage();
+  closeModal('goal');
+  showToast('Goal deleted');
+  renderAll();
+}
+
+// ============= CARD =============
+function openCard(id) {
+  ui.editing.card = id || null;
+  document.getElementById('card-modal-title').textContent = id ? 'Edit card' : 'Add card';
+  document.getElementById('card-delete-btn').style.display = id ? '' : 'none';
+  const c = id ? state.cards.find(x => x.id === id) : null;
+  document.getElementById('card-name').value = c ? c.name : '';
+  document.getElementById('card-last4').value = c ? (c.last4 || '') : '';
+  document.getElementById('card-network').value = c ? c.network : 'VISA';
+  document.getElementById('card-bonus').value = c ? (c.bonus || '') : '';
+  ui.cardColor = c ? c.color : CARD_COLORS[0];
+  renderColorPicker();
+  openModalEl('card-modal');
+}
+function renderColorPicker() {
+  document.getElementById('card-color-grid').innerHTML = CARD_COLORS.map(col =>
+    `<div class="color-swatch ${col === ui.cardColor ? 'selected' : ''}" style="background: ${col};" onclick="selectColor('${col}')"></div>`
+  ).join('');
+}
+function selectColor(col) {
+  ui.cardColor = col;
+  renderColorPicker();
+}
+function saveCard() {
+  const name = document.getElementById('card-name').value.trim();
+  if (!name) { showToast('Card name required'); return; }
+  const data = {
+    name,
+    last4: document.getElementById('card-last4').value.trim(),
+    network: document.getElementById('card-network').value,
+    color: ui.cardColor,
+    bonus: document.getElementById('card-bonus').value.trim()
+  };
+  if (ui.editing.card) {
+    const i = state.cards.findIndex(x => x.id === ui.editing.card);
+    state.cards[i] = { ...state.cards[i], ...data };
+    showToast(`Updated ${name}`);
+  } else {
+    state.cards.push({ id: uid(), ...data });
+    if (!ui.selectedCard) ui.selectedCard = state.cards[state.cards.length - 1].id;
+    showToast(`Added ${name}`);
+  }
+  saveToStorage();
+  closeModal('card');
+  renderAll();
+}
+function deleteCard() {
+  if (!confirm('Delete this card? Transactions will keep the card name as text.')) return;
+  state.cards = state.cards.filter(x => x.id !== ui.editing.card);
+  if (ui.selectedCard === ui.editing.card) ui.selectedCard = state.cards[0]?.id || null;
+  saveToStorage();
+  closeModal('card');
+  showToast('Card deleted');
+  renderAll();
+}
+
+// ============= INCOME =============
+function openIncome(id) {
+  ui.editing.income = id || null;
+  document.getElementById('income-modal-title').textContent = id ? 'Edit income' : 'Log income';
+  document.getElementById('income-delete-btn').style.display = id ? '' : 'none';
+  const i = id ? state.income.find(x => x.id === id) : null;
+  document.getElementById('income-source').value = i ? i.source : 'Co-op';
+  document.getElementById('income-amount').value = i ? i.amount : '';
+  document.getElementById('income-date').value = i ? i.date : todayStr();
+  document.getElementById('income-note').value = i ? (i.note || '') : '';
+  openModalEl('income-modal');
+}
+function saveIncome() {
+  const amount = parseFloat(document.getElementById('income-amount').value);
+  if (!amount) { showToast('Amount required'); return; }
+  const data = {
+    source: document.getElementById('income-source').value,
+    amount,
+    date: document.getElementById('income-date').value || todayStr(),
+    note: document.getElementById('income-note').value.trim()
+  };
+  if (ui.editing.income) {
+    const i = state.income.findIndex(x => x.id === ui.editing.income);
+    state.income[i] = { ...state.income[i], ...data };
+    showToast(`Updated income`);
+  } else {
+    state.income.push({ id: uid(), ...data });
+    showToast(`Logged ${fmtMoney(amount)} income`);
+  }
+  saveToStorage();
+  closeModal('income');
+  renderAll();
+}
+function deleteIncome() {
+  if (!confirm('Delete this income entry?')) return;
+  state.income = state.income.filter(x => x.id !== ui.editing.income);
+  saveToStorage();
+  closeModal('income');
+  showToast('Income deleted');
+  renderAll();
+}
+
+// ============= SETTINGS =============
+function openSettings() {
+  document.getElementById('cycle-start').value = state.cycle.start || '';
+  document.getElementById('cycle-end').value = state.cycle.end || '';
+  document.getElementById('cycle-start-balance').value = state.cycle.startingBalance || '';
+  document.getElementById('alloc-bills').value = state.allocation.bills || '';
+  document.getElementById('alloc-investing').value = state.allocation.investing || '';
+  document.getElementById('alloc-stability').value = state.allocation.stability || '';
+  document.getElementById('alloc-fun').value = state.allocation.fun || '';
+  updateAllocTotal();
+  ['alloc-bills', 'alloc-investing', 'alloc-stability', 'alloc-fun'].forEach(id => {
+    document.getElementById(id).oninput = updateAllocTotal;
+  });
+  const s = getSettings();
+  document.getElementById('sheet-url-input').value = s.sheetUrl || '';
+  document.getElementById('last-synced-text').textContent = relativeTime(s.lastSynced);
+  document.getElementById('auto-monday-toggle').classList.toggle('on', s.autoMonday);
+  document.getElementById('auto-push-toggle').classList.toggle('on', s.autoPush);
+  openModalEl('settings-modal');
+}
+function updateAllocTotal() {
+  const b = parseFloat(document.getElementById('alloc-bills').value) || 0;
+  const i = parseFloat(document.getElementById('alloc-investing').value) || 0;
+  const s = parseFloat(document.getElementById('alloc-stability').value) || 0;
+  const f = parseFloat(document.getElementById('alloc-fun').value) || 0;
+  document.getElementById('alloc-total-hint').textContent = `Total income target: ${fmtMoney(b + i + s + f)}`;
+}
+function saveCycle() {
+  state.cycle.start = document.getElementById('cycle-start').value;
+  state.cycle.end = document.getElementById('cycle-end').value;
+  state.cycle.startingBalance = parseFloat(document.getElementById('cycle-start-balance').value) || 0;
+  saveToStorage();
+  showToast('Cycle saved');
+  renderAll();
+}
+function saveAllocation() {
+  state.allocation.bills = parseFloat(document.getElementById('alloc-bills').value) || 0;
+  state.allocation.investing = parseFloat(document.getElementById('alloc-investing').value) || 0;
+  state.allocation.stability = parseFloat(document.getElementById('alloc-stability').value) || 0;
+  state.allocation.fun = parseFloat(document.getElementById('alloc-fun').value) || 0;
+  saveToStorage();
+  showToast('Allocation saved');
+  renderAll();
+}
+
+// ============= SYNC =============
+function relativeTime(iso) {
+  if (!iso) return 'Never';
+  const diff = Date.now() - new Date(iso).getTime();
+  const m = Math.floor(diff / 60000);
+  if (m < 1) return 'Just now';
+  if (m < 60) return m + ' min ago';
+  const h = Math.floor(diff / 3600000);
+  if (h < 24) return h + ' hr ago';
+  const d = Math.floor(diff / 86400000);
+  return d + (d === 1 ? ' day ago' : ' days ago');
+}
+async function syncFromSheet(manual) {
+  const s = getSettings();
+  if (!s.sheetUrl) { if (manual) showToast('Set Apps Script URL first'); return; }
+  try {
+    const res = await fetch(s.sheetUrl + '?action=getAll&t=' + Date.now());
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    if (Array.isArray(data.transactions) && data.transactions.length > 0) state.transactions = data.transactions;
+    if (Array.isArray(data.goals)) state.goals = data.goals;
+    if (Array.isArray(data.bills) || Array.isArray(data.recurring)) state.bills = data.bills || data.recurring;
+    if (Array.isArray(data.income)) state.income = data.income;
+    if (Array.isArray(data.cards)) state.cards = data.cards;
+    s.lastSynced = new Date().toISOString();
+    saveSettings(s);
+    saveToStorage();
+    document.getElementById('last-synced-text').textContent = relativeTime(s.lastSynced);
+    showToast('Synced from Sheet');
+    renderAll();
+  } catch (err) {
+    console.error('Sync failed', err);
+    if (manual) showToast('Sync failed: ' + err.message);
+  }
+}
+async function pushTransaction(tx) {
+  const s = getSettings();
+  if (!s.sheetUrl || !s.autoPush) return;
+  try {
+    await fetch(s.sheetUrl + '?action=addTransaction&tx=' + encodeURIComponent(JSON.stringify(tx)));
+  } catch (err) { console.error('Push failed', err); }
+}
+function shouldAutoPull() {
+  const s = getSettings();
+  if (!s.sheetUrl || !s.autoMonday) return false;
+  const today = new Date();
+  if (today.getDay() !== 1) return false;
+  if (s.lastSynced) {
+    const last = new Date(s.lastSynced).toDateString();
+    if (last === today.toDateString()) return false;
+  }
+  return true;
+}
+function syncNow() { syncFromSheet(true); }
+function saveSheetUrl() {
+  const s = getSettings();
+  s.sheetUrl = document.getElementById('sheet-url-input').value.trim();
+  saveSettings(s);
+  showToast(s.sheetUrl ? 'URL saved' : 'URL cleared');
+}
+function toggleSetting(key) {
+  const s = getSettings();
+  s[key] = !s[key];
+  saveSettings(s);
+  document.getElementById('auto-monday-toggle').classList.toggle('on', s.autoMonday);
+  document.getElementById('auto-push-toggle').classList.toggle('on', s.autoPush);
+}
+function clearLocal() {
+  if (!confirm('Clear ALL local data? This wipes everything from this browser.')) return;
+  localStorage.removeItem(STORAGE_STATE);
+  showToast('Cleared. Refreshing...');
+  setTimeout(() => location.reload(), 700);
+}
+
+// ============= INIT =============
+loadFromStorage();
+renderHome();
+if (shouldAutoPull()) syncFromSheet(false);
+</script>
+
+</body>
+</html>
